@@ -1,0 +1,559 @@
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDataStore } from '../../store/dataStore.jsx';
+import { getSession } from '../../store/sessionStore.js';
+import { todayKey, toDayKey } from '../../utils/date.js';
+import { PageHeader } from '../../components/ui/PageHeader.jsx';
+import { Button } from '../../components/ui/Button.jsx';
+import { Card } from '../../components/ui/Card.jsx';
+import { Select } from '../../components/ui/Select.jsx';
+import { Input } from '../../components/ui/Input.jsx';
+import { EmptyState } from '../../components/ui/EmptyState.jsx';
+import { useToast } from '../../components/ui/Toast.jsx';
+import { MotionPage } from '../../components/motion/MotionPage.jsx';
+import { motion } from 'framer-motion';
+import { KanbanBoard } from '../../components/admin/tasks/KanbanBoard.jsx';
+import { TaskTable } from '../../components/admin/tasks/TaskTable.jsx';
+import { TaskModal } from '../../components/admin/tasks/TaskModal.jsx';
+import { Search, X, Filter, ChevronDown, ChevronUp, Columns3, Table } from 'lucide-react';
+
+const VIEW_KANBAN = 'kanban';
+const VIEW_TABLE = 'table';
+
+/**
+ * Admin global tasks: filters (Project, Assignee, Status, Priority), view toggle Kanban | Table.
+ * Create/Edit/Move via DataStore. Read-only per task when project is ON_HOLD or COMPLETED.
+ */
+export function AdminTasksPage() {
+  const navigate = useNavigate();
+  const { state, moveTaskStatus } = useDataStore();
+  const session = getSession();
+  const [view, setView] = useState(VIEW_KANBAN);
+  const [filterProject, setFilterProject] = useState('');
+  const [filterAssignee, setFilterAssignee] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterDate, setFilterDate] = useState(todayKey()); // Default to today
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTasks, setSelectedTasks] = useState(new Set());
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('create');
+  const [editingTask, setEditingTask] = useState(null);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!session) navigate('/login', { replace: true });
+  }, [session, navigate]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      // Ctrl/Cmd + K or F: Focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-tasks')?.focus();
+      } else if (e.key === 'f' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        document.getElementById('search-tasks')?.focus();
+      }
+
+      // C: Create new task
+      if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleCreateTask();
+      }
+
+      // Esc: Clear search if focused
+      if (e.key === 'Escape' && document.activeElement?.id === 'search-tasks') {
+        setSearchQuery('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const tasks = state.tasks || [];
+  const projects = state.projects || [];
+  const users = (state.users || []).filter((u) => u.isActive !== false);
+  const sessionForRepo = session ? { userId: session.userId, role: session.role } : null;
+
+  const filteredTasks = useMemo(() => {
+    let list = tasks;
+
+    // Apply search filter first
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      list = list.filter((task) => {
+        const searchableText = [
+          task.title,
+          task.description,
+          users.find(u => u.id === task.assigneeId)?.name,
+          projects.find(p => p.id === task.projectId)?.name,
+          ...(task.tags || [])
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return searchableText.includes(query);
+      });
+    }
+
+    // Apply other filters
+    if (filterProject) list = list.filter((t) => t.projectId === filterProject);
+    if (filterAssignee) list = list.filter((t) => t.assigneeId === filterAssignee);
+    if (filterStatus) list = list.filter((t) => t.status === filterStatus);
+    if (filterPriority) list = list.filter((t) => t.priority === filterPriority);
+    if (filterDate) {
+      list = list.filter((t) => t.assignedAt && toDayKey(t.assignedAt) === filterDate);
+    }
+    return list;
+  }, [tasks, projects, users, searchQuery, filterProject, filterAssignee, filterStatus, filterPriority, filterDate]);
+
+  const getTaskReadOnly = useMemo(() => {
+    const projectMap = new Map(projects.map((p) => [p.id, p]));
+    return (task) => {
+      const project = projectMap.get(task.projectId);
+      return project && (project.status === 'ON_HOLD' || project.status === 'COMPLETED');
+    };
+  }, [projects]);
+
+  function handleCreateTask() {
+    setModalMode('create');
+    setEditingTask(null);
+    setModalOpen(true);
+  }
+
+  function handleEditTask(task) {
+    setModalMode('edit');
+    setEditingTask(task);
+    setModalOpen(true);
+  }
+
+  function handleMoveStatus(taskId, newStatus) {
+    if (!sessionForRepo) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || getTaskReadOnly(task)) return;
+    moveTaskStatus(taskId, newStatus, sessionForRepo);
+  }
+
+  function handleAssigneeNotify(message) {
+    if (message) showToast({ title: 'Notification', message });
+  }
+
+  function handleSelectTask(taskId, selected) {
+    const newSelected = new Set(selectedTasks);
+    if (selected) {
+      newSelected.add(taskId);
+    } else {
+      newSelected.delete(taskId);
+    }
+    setSelectedTasks(newSelected);
+  }
+
+  function handleSelectAll(selected) {
+    if (selected) {
+      setSelectedTasks(new Set(filteredTasks.map(t => t.id)));
+    } else {
+      setSelectedTasks(new Set());
+    }
+  }
+
+  function handleBulkStatusChange(newStatus) {
+    if (selectedTasks.size === 0) return;
+
+    selectedTasks.forEach(taskId => {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && !getTaskReadOnly(task)) {
+        moveTaskStatus(taskId, newStatus, sessionForRepo);
+      }
+    });
+
+    setSelectedTasks(new Set());
+    showToast({
+      title: 'Bulk Update',
+      message: `Updated ${selectedTasks.size} task${selectedTasks.size > 1 ? 's' : ''} to ${newStatus === 'TODO' ? 'To Do' : newStatus === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}`
+    });
+  }
+
+  function clearSelection() {
+    setSelectedTasks(new Set());
+  }
+
+  function handleNavigateToProject(projectId) {
+    navigate(`/admin/projects/${projectId}`);
+  }
+
+  function applyFilterPreset(preset) {
+    switch (preset) {
+      case 'my-tasks':
+        setFilterAssignee(session?.userId || '');
+        setFilterProject('');
+        setFilterStatus('');
+        setFilterPriority('');
+        setFilterDate(todayKey());
+        break;
+      case 'overdue':
+        setFilterAssignee('');
+        setFilterProject('');
+        setFilterStatus('');
+        setFilterPriority('HIGH');
+        setFilterDate('');
+        break;
+      case 'high-priority':
+        setFilterAssignee('');
+        setFilterProject('');
+        setFilterStatus('');
+        setFilterPriority('HIGH');
+        setFilterDate('');
+        break;
+      case 'this-week':
+        setFilterAssignee('');
+        setFilterProject('');
+        setFilterStatus('');
+        setFilterPriority('');
+        setFilterDate(todayKey());
+        break;
+      case 'clear-all':
+        setFilterProject('');
+        setFilterAssignee('');
+        setFilterStatus('');
+        setFilterPriority('');
+        setFilterDate('');
+        setSearchQuery('');
+        break;
+    }
+  }
+
+  function getActiveFilterCount() {
+    let count = 0;
+    if (filterProject) count++;
+    if (filterAssignee) count++;
+    if (filterStatus) count++;
+    if (filterPriority) count++;
+    if (filterDate) count++;
+    if (searchQuery.trim()) count++;
+    return count;
+  }
+
+  return (
+    <MotionPage className="space-y-[var(--section-gap)]">
+      <PageHeader
+        title="Tasks"
+        subtitle="Manage tasks across projects"
+        rightActions={<Button variant="primary" onClick={handleCreateTask}>Create Task</Button>}
+      />
+
+      <Card padding="p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="section-heading text-base">View & filters</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+            {getActiveFilterCount() > 0 && (
+              <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">
+                {getActiveFilterCount()}
+              </span>
+            )}
+            {filtersExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row lg:items-end gap-4 mb-4">
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+            <label htmlFor="search-tasks" className="text-sm font-medium text-[var(--fg)]">Search Tasks</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                id="search-tasks"
+                type="text"
+                placeholder="Search by title, description, assignee, project, or tags... (Press F or Ctrl+K)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+                aria-label="Search tasks"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filter Chips */}
+        {(getActiveFilterCount() > 0 || filtersExpanded) && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                  Search: "{searchQuery}"
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="hover:bg-blue-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterProject && (
+                <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                  Project: {projects.find(p => p.id === filterProject)?.name}
+                  <button
+                    onClick={() => setFilterProject('')}
+                    className="hover:bg-green-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterAssignee && (
+                <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm">
+                  Assignee: {users.find(u => u.id === filterAssignee)?.name}
+                  <button
+                    onClick={() => setFilterAssignee('')}
+                    className="hover:bg-purple-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterStatus && (
+                <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
+                  Status: {filterStatus === 'TODO' ? 'To Do' : filterStatus === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
+                  <button
+                    onClick={() => setFilterStatus('')}
+                    className="hover:bg-yellow-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterPriority && (
+                <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                  Priority: {filterPriority === 'HIGH' ? 'High' : filterPriority === 'MEDIUM' ? 'Medium' : 'Low'}
+                  <button
+                    onClick={() => setFilterPriority('')}
+                    className="hover:bg-red-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterDate && (
+                <span className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-sm">
+                  Date: {filterDate}
+                  <button
+                    onClick={() => setFilterDate('')}
+                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+
+            {/* Filter Presets */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className="text-sm font-medium text-gray-600 mr-2">Quick filters:</span>
+              <button
+                onClick={() => applyFilterPreset('my-tasks')}
+                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+              >
+                My Tasks
+              </button>
+              <button
+                onClick={() => applyFilterPreset('overdue')}
+                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+              >
+                High Priority
+              </button>
+              <button
+                onClick={() => applyFilterPreset('this-week')}
+                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+              >
+                Today's Tasks
+              </button>
+              <button
+                onClick={() => applyFilterPreset('clear-all')}
+                className="text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-full transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Collapsible Filters */}
+        {filtersExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-t pt-4"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-project" className="text-sm font-medium text-[var(--fg)]">Project</label>
+                <Select id="filter-project" value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="min-w-[140px]" aria-label="Filter by project">
+                  <option value="">All</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-assignee" className="text-sm font-medium text-[var(--fg)]">Assignee</label>
+                <Select id="filter-assignee" value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value)} className="min-w-[120px]" aria-label="Filter by assignee">
+                  <option value="">All</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-status" className="text-sm font-medium text-[var(--fg)]">Status</label>
+                <Select id="filter-status" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="min-w-[100px]" aria-label="Filter by status">
+                  <option value="">All</option>
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-priority" className="text-sm font-medium text-[var(--fg)]">Priority</label>
+                <Select id="filter-priority" value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="min-w-[100px]" aria-label="Filter by priority">
+                  <option value="">All</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-date" className="text-sm font-medium text-[var(--fg)]">Date</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    id="filter-date"
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="min-w-[140px]"
+                    aria-label="Filter by date"
+                  />
+                  <Button
+                    variant={filterDate === todayKey() ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterDate(todayKey())}
+                    className="whitespace-nowrap"
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    variant={!filterDate ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterDate('')}
+                    className="whitespace-nowrap"
+                  >
+                    Show All
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* View Toggle - Always visible */}
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-[var(--fg)]">View</span>
+            <div className="flex rounded-[var(--radius)] border border-[var(--border)] overflow-hidden bg-[var(--card)]" role="group" aria-label="View mode">
+              <button
+                type="button"
+                onClick={() => setView(VIEW_KANBAN)}
+                className={`p-2 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)] ${view === VIEW_KANBAN ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--fg-muted)] hover:bg-[var(--muted)] hover:text-[var(--fg)]'}`}
+                aria-pressed={view === VIEW_KANBAN}
+                aria-label="Kanban view"
+                title="Kanban view"
+              >
+                <Columns3 className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView(VIEW_TABLE)}
+                className={`p-2 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)] ${view === VIEW_TABLE ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--fg-muted)] hover:bg-[var(--muted)] hover:text-[var(--fg)]'}`}
+                aria-pressed={view === VIEW_TABLE}
+                aria-label="Table view"
+                title="Table view"
+              >
+                <Table className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {filteredTasks.length === 0 ? (
+        <EmptyState
+          title={tasks.length === 0 ? 'No tasks' : 'No results match your filters'}
+          message={tasks.length === 0 ? 'Create a task to get started.' : 'Try clearing filters.'}
+          actionLabel={tasks.length === 0 ? 'Create Task' : 'Clear All Filters'}
+          onAction={
+            tasks.length === 0
+              ? handleCreateTask
+              : () => { setFilterProject(''); setFilterAssignee(''); setFilterStatus(''); setFilterPriority(''); setFilterDate(''); }
+          }
+        />
+      ) : view === VIEW_KANBAN ? (
+        <KanbanBoard
+          tasks={filteredTasks}
+          users={users}
+          projects={projects}
+          onMoveStatus={handleMoveStatus}
+          onEdit={handleEditTask}
+          readOnly={false}
+          getTaskReadOnly={getTaskReadOnly}
+          selectedTasks={selectedTasks}
+          onSelectTask={handleSelectTask}
+          onSelectAll={handleSelectAll}
+          onBulkStatusChange={handleBulkStatusChange}
+          onClearSelection={clearSelection}
+          onNavigateToProject={handleNavigateToProject}
+          loading={false} // Set to true when implementing actual loading states
+        />
+      ) : (
+        <TaskTable
+          tasks={filteredTasks}
+          users={users}
+          projects={projects}
+          onEdit={handleEditTask}
+          onMoveStatus={handleMoveStatus}
+          getTaskReadOnly={getTaskReadOnly}
+          onNavigateToProject={handleNavigateToProject}
+        />
+      )}
+
+      <TaskModal
+        open={modalOpen}
+        mode={modalMode}
+        task={editingTask}
+        onClose={() => { setModalOpen(false); setEditingTask(null); }}
+        onSuccess={() => {}}
+        onAssigneeNotify={handleAssigneeNotify}
+      />
+    </MotionPage>
+  );
+}
