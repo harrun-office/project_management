@@ -22,12 +22,12 @@ export function EmployeeProfilePage() {
         {/* Profile Information */}
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[var(--primary)] to-[var(--purple)] rounded-full flex items-center justify-center text-[var(--primary-fg)] font-bold text-lg">
               {session.name?.charAt(0)?.toUpperCase() ?? 'E'}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Profile Information</h3>
-              <p className="text-sm text-gray-600">Update your personal information</p>
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Profile Information</h3>
+              <p className="text-sm text-[var(--fg-muted)]">Update your personal information</p>
             </div>
           </div>
 
@@ -76,7 +76,7 @@ export function EmployeeProfilePage() {
                 <Save className="w-4 h-4 mr-2" />
                 Save Changes
               </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-[var(--fg-muted)] mt-2 text-center">
                 Profile editing is disabled in demo mode
               </p>
             </div>
@@ -86,46 +86,46 @@ export function EmployeeProfilePage() {
         {/* Account Settings */}
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white">
+            <div className="w-12 h-12 bg-gradient-to-br from-[var(--success)] to-[var(--teal)] rounded-full flex items-center justify-center text-[var(--success-fg)]">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
-              <p className="text-sm text-gray-600">Manage your account preferences</p>
+              <h3 className="text-lg font-semibold text-[var(--fg)]">Account Settings</h3>
+              <p className="text-sm text-[var(--fg-muted)]">Manage your account preferences</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-[var(--info-light)] rounded-lg border border-[var(--info-muted)]">
               <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-blue-600 mt-0.5" />
+                <Users className="w-5 h-5 text-[var(--info)] mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-blue-900">Employee Access</h4>
-                  <p className="text-sm text-blue-700 mt-1">
+                  <h4 className="font-medium text-[var(--info-muted-fg)]">Employee Access</h4>
+                  <p className="text-sm text-[var(--info-muted-fg)] mt-1">
                     You have access to your assigned projects, tasks, and team collaboration features.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="p-4 bg-[var(--success-light)] rounded-lg border border-[var(--success-muted)]">
               <div className="flex items-start gap-3">
-                <Building className="w-5 h-5 text-green-600 mt-0.5" />
+                <Building className="w-5 h-5 text-[var(--success)] mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-green-900">Department</h4>
-                  <p className="text-sm text-green-700 mt-1">
+                  <h4 className="font-medium text-[var(--success-muted-fg)]">Department</h4>
+                  <p className="text-sm text-[var(--success-muted-fg)] mt-1">
                     {session.department || 'Development'} - Project Management Enterprise
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="p-4 bg-[var(--purple-light)] rounded-lg border border-[var(--purple-muted)]">
               <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-purple-600 mt-0.5" />
+                <User className="w-5 h-5 text-[var(--purple-fg)] mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-purple-900">Team Member</h4>
-                  <p className="text-sm text-purple-700 mt-1">
+                  <h4 className="font-medium text-[var(--purple-fg)]">Team Member</h4>
+                  <p className="text-sm text-[var(--purple-fg)] mt-1">
                     Active member of the project management team with full access to assigned work.
                   </p>
                 </div>

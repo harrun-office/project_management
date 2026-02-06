@@ -7,7 +7,7 @@ import { MotionPage } from '../components/motion/MotionPage.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Input } from '../components/ui/Input.jsx';
 import { listStagger, listItem, prefersReducedMotion } from '../components/motion/motionPresets.js';
-import { FolderKanban, Mail, Lock, CheckCircle2, Zap, Users, BarChart3, Loader2 } from 'lucide-react';
+import { FolderKanban, Mail, Lock, CheckCircle2, Zap, Users, BarChart3, Loader2, Eye, EyeOff } from 'lucide-react';
 
 const spring = { type: 'spring', stiffness: 400, damping: 30 };
 const springSoft = { type: 'spring', stiffness: 300, damping: 28 };
@@ -44,6 +44,7 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const isMountedRef = useRef(true);
   useEffect(() => () => { isMountedRef.current = false; }, []);
@@ -302,16 +303,33 @@ export function LoginPage() {
                   <label htmlFor="login-password" className="block text-xs font-medium text-[var(--fg-muted)] mb-1.5">
                     Password
                   </label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    leftIcon={Lock}
-                    disabled={anyLoading}
-                    autoComplete="current-password"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      leftIcon={Lock}
+                      disabled={anyLoading}
+                      autoComplete="current-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={anyLoading}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-fg)] hover:text-[var(--fg)] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-1 rounded p-1"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={0}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <Eye className="w-4 h-4" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <Button
                   type="submit"

@@ -27,11 +27,11 @@ export function DataCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const variants = {
-    default: 'bg-white border-gray-200 hover:shadow-md',
-    primary: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200',
-    success: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200',
-    warning: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200',
-    danger: 'bg-gradient-to-br from-red-50 to-pink-50 border-red-200'
+    default: 'bg-[var(--surface)] border-[var(--border)] hover:shadow-[var(--shadow-md)]',
+    primary: 'bg-[var(--info-light)] border-[var(--info-muted)]',
+    success: 'bg-[var(--success-light)] border-[var(--success-muted)]',
+    warning: 'bg-[var(--warning-light)] border-[var(--warning-muted)]',
+    danger: 'bg-[var(--danger-light)] border-[var(--danger-muted)]'
   };
 
   const handleCardClick = (e) => {
@@ -58,7 +58,7 @@ export function DataCard({
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Avatar/Icon */}
             {avatar && (
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--muted)] flex items-center justify-center text-sm font-medium text-[var(--fg)]">
                 {avatar}
               </div>
             )}
@@ -67,11 +67,11 @@ export function DataCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">
+                  <h3 className="font-semibold text-[var(--fg)] truncate">
                     {data[primaryField] || 'Untitled'}
                   </h3>
                   {secondaryField && data[secondaryField] && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                    <p className="text-sm text-[var(--fg-muted)] line-clamp-2 mt-1">
                       {data[secondaryField]}
                     </p>
                   )}
@@ -145,13 +145,13 @@ export function DataCard({
 
         {/* Additional Fields Grid */}
         {fields && fields.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-[var(--border)]">
             {fields.map((field, index) => (
               <div key={index} className="min-w-0">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
                   {field.label}
                 </div>
-                <div className="text-sm text-gray-900 mt-1 truncate">
+                <div className="text-sm text-[var(--fg)] mt-1 truncate">
                   {field.value || '—'}
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function DataCard({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-4 pt-4 border-t border-gray-100"
+            className="mt-4 pt-4 border-t border-[var(--border)]"
           >
             {expandedContent(data)}
           </motion.div>
@@ -198,24 +198,24 @@ export function ResponsiveDataGrid({
 
   const renderTableView = () => (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-[var(--border)]">
+        <thead className="bg-[var(--muted)]">
           <tr>
             {columns.map((col, index) => (
               <th
                 key={index}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider"
               >
                 {col.label}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-[var(--surface)] divide-y divide-[var(--border)]">
           {data.map((item, index) => (
-            <tr key={index} className="hover:bg-gray-50">
+            <tr key={index} className="hover:bg-[var(--muted)]/50">
               {columns.map((col, colIndex) => (
-                <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-[var(--fg)]">
                   {col.render ? col.render(item) : item[col.key]}
                 </td>
               ))}
@@ -257,15 +257,15 @@ export function ResponsiveDataGrid({
           <Card key={i} className="p-4">
             <div className="animate-pulse space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                <div className="w-10 h-10 bg-[var(--muted)] rounded-full"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-[var(--muted)] rounded w-3/4"></div>
+                  <div className="h-3 bg-[var(--muted)] rounded w-1/2"></div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-[var(--muted)] rounded"></div>
+                <div className="h-3 bg-[var(--muted)] rounded"></div>
               </div>
             </div>
           </Card>
@@ -282,11 +282,11 @@ export function ResponsiveDataGrid({
     <div className={className}>
       {/* View Mode Toggle (optional) */}
       <div className="flex justify-end mb-4">
-        <div className="flex rounded-lg border border-gray-200 bg-white p-1">
+        <div className="flex rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1">
           <button
             onClick={() => setViewMode('cards')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              shouldUseCards() ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+              shouldUseCards() ? 'bg-[var(--primary-muted)] text-[var(--primary-muted-fg)]' : 'text-[var(--fg-muted)] hover:bg-[var(--muted)]'
             }`}
           >
             Cards
@@ -294,7 +294,7 @@ export function ResponsiveDataGrid({
           <button
             onClick={() => setViewMode('table')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              !shouldUseCards() ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+              !shouldUseCards() ? 'bg-[var(--primary-muted)] text-[var(--primary-muted-fg)]' : 'text-[var(--fg-muted)] hover:bg-[var(--muted)]'
             }`}
           >
             Table

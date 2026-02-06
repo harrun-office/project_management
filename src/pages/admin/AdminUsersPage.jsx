@@ -235,12 +235,12 @@ export function AdminUsersPage() {
               label: 'Member',
               render: (user) => (
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-700 font-semibold text-sm shrink-0">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--primary-muted)] text-[var(--primary-muted-fg)] font-semibold text-sm shrink-0">
                     {getInitial(user.name)}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{user.name || '—'}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email || '—'}</p>
+                    <p className="font-medium text-[var(--fg)] truncate">{user.name || '—'}</p>
+                    <p className="text-xs text-[var(--fg-muted)] truncate">{user.email || '—'}</p>
                   </div>
                 </div>
               )
@@ -249,7 +249,7 @@ export function AdminUsersPage() {
               key: 'employeeId',
               label: 'Employee ID',
               render: (user) => (
-                <span className="font-mono text-sm font-medium text-gray-900">
+                <span className="font-mono text-sm font-medium text-[var(--fg)]">
                   {user.employeeId || '—'}
                 </span>
               )
@@ -306,7 +306,7 @@ export function AdminUsersPage() {
                       size="sm"
                       disabled={isCurrentUser}
                       onClick={() => handleDeleteUser(user)}
-                      className="border-red-300 text-red-700 hover:bg-red-50"
+                      className="border-[var(--danger-muted)] text-[var(--danger-muted-fg)] hover:bg-[var(--danger-light)]"
                       leftIcon={Trash2}
                     >
                       Delete
@@ -318,8 +318,8 @@ export function AdminUsersPage() {
                       onClick={() => handleToggleActive(user)}
                       className={
                         user.isActive !== false
-                          ? 'border-amber-300 text-amber-700 hover:bg-amber-50'
-                          : 'border-green-300 text-green-700 hover:bg-green-50'
+                          ? 'border-[var(--warning-muted)] text-[var(--warning-muted-fg)] hover:bg-[var(--warning-light)]'
+                          : 'border-[var(--success-muted)] text-[var(--success-muted-fg)] hover:bg-[var(--success-light)]'
                       }
                     >
                       {user.isActive !== false ? 'Deactivate' : 'Activate'}
@@ -367,7 +367,7 @@ export function AdminUsersPage() {
                   icon: Trash2,
                   label: 'Delete user',
                   onClick: () => handleDeleteUser(user),
-                  className: 'text-red-600 hover:text-red-700',
+                  className: 'text-[var(--danger)] hover:text-[var(--danger-hover)]',
                   disabled: isCurrentUser
                 }
               ];
@@ -379,12 +379,12 @@ export function AdminUsersPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</div>
-                      <div className="text-sm text-gray-900 mt-1">{user.email || '—'}</div>
+                      <div className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Email</div>
+                      <div className="text-sm text-[var(--fg)] mt-1">{user.email || '—'}</div>
                     </div>
                     <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Role</div>
-                      <div className="text-sm text-gray-900 mt-1">{user.role || '—'}</div>
+                      <div className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Role</div>
+                      <div className="text-sm text-[var(--fg)] mt-1">{user.role || '—'}</div>
                     </div>
                   </div>
                   <div className="flex gap-2 pt-2">
@@ -412,8 +412,8 @@ export function AdminUsersPage() {
                           onClick={() => handleToggleActive(user)}
                           className={
                             user.isActive !== false
-                              ? 'border-amber-300 text-amber-700 hover:bg-amber-50'
-                              : 'border-green-300 text-green-700 hover:bg-green-50'
+                              ? 'border-[var(--warning-muted)] text-[var(--warning-muted-fg)] hover:bg-[var(--warning-light)]'
+                              : 'border-[var(--success-muted)] text-[var(--success-muted-fg)] hover:bg-[var(--success-light)]'
                           }
                         >
                           {user.isActive !== false ? 'Deactivate' : 'Activate'}
@@ -422,7 +422,7 @@ export function AdminUsersPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteUser(user)}
-                          className="border-red-300 text-red-700 hover:bg-red-50"
+                          className="border-[var(--danger-muted)] text-[var(--danger-muted-fg)] hover:bg-[var(--danger-light)]"
                           leftIcon={Trash2}
                         >
                           Delete
@@ -684,26 +684,26 @@ export function AdminUsersPage() {
                     {userTasks.length === 0 ? (
                       <p className="px-5 py-6 text-sm text-[var(--fg-muted)]">No tasks assigned to this user.</p>
                     ) : (
-                      <div className="overflow-x-auto max-h-80 overflow-y-auto">
-                        <table className="text-sm border-collapse w-full" role="table" style={{ minWidth: '640px' }}>
+                      <div className="max-h-80 overflow-y-auto">
+                        <table className="text-xs border-collapse w-full" role="table">
                           <thead className="sticky top-0 z-10 bg-[var(--muted)] border-b-2 border-[var(--border)]">
                             <tr>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '120px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Task
                               </th>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '90px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Project
                               </th>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '80px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Status
                               </th>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '64px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Priority
                               </th>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '88px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Assigned
                               </th>
-                              <th scope="col" className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-[var(--fg-secondary)] whitespace-nowrap" style={{ minWidth: '80px' }}>
+                              <th scope="col" className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--fg-secondary)]">
                                 Due
                               </th>
                             </tr>
@@ -711,19 +711,23 @@ export function AdminUsersPage() {
                           <tbody className="divide-y divide-[var(--border)] bg-[var(--card)]">
                             {userTasks.map((t) => (
                               <tr key={t.id} className="hover:bg-[var(--muted)]/30">
-                                <td className="px-3 py-3 font-medium text-[var(--fg)] align-top">{t.title}</td>
-                                <td className="px-3 py-3 text-[var(--fg-secondary)] align-top">{projectById.get(t.projectId)?.name || '—'}</td>
-                                <td className="px-3 py-3 align-top">
-                                  <Badge variant={t.status === 'COMPLETED' ? 'success' : t.status === 'IN_PROGRESS' ? 'info' : 'neutral'}>
+                                <td className="px-2 py-2 font-medium text-[var(--fg)] align-top max-w-[200px] truncate" title={t.title}>
+                                  {t.title}
+                                </td>
+                                <td className="px-2 py-2 text-[var(--fg-secondary)] align-top max-w-[120px] truncate" title={projectById.get(t.projectId)?.name || '—'}>
+                                  {projectById.get(t.projectId)?.name || '—'}
+                                </td>
+                                <td className="px-2 py-2 align-top">
+                                  <Badge variant={t.status === 'COMPLETED' ? 'success' : t.status === 'IN_PROGRESS' ? 'info' : 'neutral'} className="text-xs">
                                     {t.status === 'TODO' ? 'To Do' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
                                   </Badge>
                                 </td>
-                                <td className="px-3 py-3 text-[var(--fg-muted)] align-top whitespace-nowrap">{t.priority || '—'}</td>
-                                <td className="px-3 py-3 text-[var(--fg-muted)] align-top whitespace-nowrap">
-                                  {t.assignedAt ? new Date(t.assignedAt).toLocaleDateString() : '—'}
+                                <td className="px-2 py-2 text-[var(--fg-muted)] align-top text-xs">{t.priority || '—'}</td>
+                                <td className="px-2 py-2 text-[var(--fg-muted)] align-top text-xs">
+                                  {t.assignedAt ? new Date(t.assignedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                 </td>
-                                <td className="px-3 py-3 text-[var(--fg-muted)] align-top whitespace-nowrap">
-                                  {t.deadline ? new Date(t.deadline).toLocaleDateString() : '—'}
+                                <td className="px-2 py-2 text-[var(--fg-muted)] align-top text-xs">
+                                  {t.deadline ? new Date(t.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                 </td>
                               </tr>
                             ))}

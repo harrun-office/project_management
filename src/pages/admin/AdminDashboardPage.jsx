@@ -48,6 +48,7 @@ import { SkeletonCard } from '../../components/ui/Skeleton.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { MotionPage } from '../../components/motion/MotionPage.jsx';
 import { MotionCard } from '../../components/motion/MotionCard.jsx';
+import { MotionModal } from '../../components/motion/MotionModal.jsx';
 
 /**
  * Admin Dashboard: eye-catching, easy to scan. Hero strip, grouped KPIs, clear sections.
@@ -66,6 +67,7 @@ const TASK_KPIS = [
   { key: 'totalOpenTasks', label: 'To do', icon: Circle, accent: 'var(--warning)', bg: 'var(--warning-light)' },
   { key: 'tasksInProgress', label: 'In progress', icon: Loader2, accent: 'var(--teal)', bg: 'var(--teal-light)' },
   { key: 'tasksCompleted', label: 'Done', icon: CheckCircle2, accent: 'var(--success)', bg: 'var(--success-light)' },
+  { key: 'overdueTasks', label: 'Overdue', icon: AlertTriangle, accent: 'var(--danger)', bg: 'var(--danger-light)' },
 ];
 
 export function AdminDashboardPage() {
@@ -89,6 +91,8 @@ export function AdminDashboardPage() {
     search: false
   });
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [showOverdueTasksModal, setShowOverdueTasksModal] = useState(false);
 
   // Debounce search query for performance
   useEffect(() => {
@@ -166,6 +170,12 @@ export function AdminDashboardPage() {
     const pendingTasks = tasks.filter((t) => t.status === 'TODO').length;
     const tasksInProgress = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
     const tasksCompleted = tasks.filter((t) => t.status === 'COMPLETED').length;
+    const today = new Date();
+    const overdueTasksCount = tasks.filter(t =>
+      t.status !== 'COMPLETED' &&
+      t.deadline &&
+      new Date(t.deadline) < today
+    ).length;
     return {
       totalProjects: projects.length,
       activeProjects: active,
@@ -175,6 +185,7 @@ export function AdminDashboardPage() {
       totalOpenTasks: pendingTasks,
       tasksInProgress,
       tasksCompleted,
+      overdueTasks: overdueTasksCount,
     };
   }, [projects, tasks]);
 
@@ -202,6 +213,7 @@ export function AdminDashboardPage() {
       totalOpenTasks: { change: getRandomTrend(), period: 'vs last month' },
       tasksInProgress: { change: getRandomTrend(), period: 'vs last month' },
       tasksCompleted: { change: getRandomTrend(), period: 'vs last week' },
+      overdueTasks: { change: getRandomTrend(), period: 'vs last week' },
     };
   }, []);
 
@@ -216,7 +228,33 @@ export function AdminDashboardPage() {
     return points;
   };
 
-  // Find project with soonest deadline
+  // Find projects due within 14 days
+  const projectsDueWithin14Days = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fourteenDaysFromNow = new Date(today);
+    fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
+
+    return projects
+      .filter(p => {
+        if (!p.endDate || p.status === 'COMPLETED') return false;
+        const endDate = new Date(p.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate >= today && endDate <= fourteenDaysFromNow;
+      })
+      .map(p => ({
+        ...p,
+        daysUntilDeadline: Math.ceil((new Date(p.endDate) - today) / (1000 * 60 * 60 * 24))
+      }))
+      .sort((a, b) => a.daysUntilDeadline - b.daysUntilDeadline); // Sort by closest deadline first
+  }, [projects]);
+
+  // Project with closest deadline (highest priority)
+  const closestDeadlineProject = useMemo(() => {
+    return projectsDueWithin14Days.length > 0 ? projectsDueWithin14Days[0] : null;
+  }, [projectsDueWithin14Days]);
+
+  // Find project with soonest deadline (for backward compatibility)
   const soonestDeadlineProject = useMemo(() => {
     const activeProjects = projects.filter(p => p.status === 'ACTIVE' && p.endDate);
     if (activeProjects.length === 0) return null;
@@ -305,15 +343,6 @@ export function AdminDashboardPage() {
     ).slice(0, 3);
   }, [tasks]);
 
-  const productivityScore = useMemo(() => {
-    const completedToday = tasks.filter(t =>
-      t.status === 'COMPLETED' &&
-      t.completedAt &&
-      new Date(t.completedAt).toDateString() === new Date().toDateString()
-    ).length;
-    const totalTasks = tasks.length;
-    return totalTasks > 0 ? Math.round((completedToday / Math.max(totalTasks * 0.1, 1)) * 100) : 0;
-  }, [tasks]);
 
   const timeGreeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -487,18 +516,8 @@ export function AdminDashboardPage() {
         color: 'var(--warning)'
       });
     }
-    if (productivityScore < 50) {
-      alerts.push({
-        type: 'info',
-        icon: TrendingUp,
-        title: 'Low productivity today',
-        message: 'Consider task prioritization',
-        action: '/admin/tasks',
-        color: 'var(--info)'
-      });
-    }
     return alerts.slice(0, 2); // Show max 2 alerts
-  }, [overdueTasks, urgentTasks, productivityScore]);
+  }, [overdueTasks, urgentTasks]);
 
   const teamRows = [
     { label: 'Total active employees', value: activeUsers.length },
@@ -578,21 +597,19 @@ export function AdminDashboardPage() {
         subtitle={todayLabel}
         description="Overview of projects, tasks, and team allocation."
         rightActions={
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Quick Actions Dropdown */}
-            <div className="relative">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => showToast({ title: 'Quick Actions', message: 'Feature coming soon!' })}
-                leftIcon={Zap}
-              >
-                Quick Actions
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-2.5">
+            {/* Primary Action */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => showToast({ title: 'Quick Actions', message: 'Feature coming soon!' })}
+              leftIcon={Zap}
+            >
+              Quick Actions
+            </Button>
 
-            {/* Workflow Shortcuts */}
-            <div className="flex items-center gap-1">
+            {/* Workflow Actions */}
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -613,36 +630,36 @@ export function AdminDashboardPage() {
               </Button>
             </div>
 
-            {/* Navigation Shortcuts */}
-            <div className="flex items-center gap-1 border-l border-[var(--border)] pl-2 ml-2">
+            {/* Navigation Links */}
+            <div className="flex items-center gap-1.5 border-l border-[var(--border)] pl-2.5">
               <Link
                 to="/admin/projects"
-                className="inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius)] px-3 py-1.5 text-xs bg-[var(--muted)] text-[var(--fg)] hover:bg-[var(--active)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 font-medium rounded-lg px-2.5 py-1.5 text-xs bg-[var(--muted)] text-[var(--fg)] hover:bg-[var(--active)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
                 title="Projects (Ctrl+P)"
               >
-                <FolderKanban className="w-4 h-4 shrink-0" aria-hidden />
-                Projects
+                <FolderKanban className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">Projects</span>
               </Link>
               <Link
                 to="/admin/tasks"
-                className="inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius)] px-3 py-1.5 text-xs border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 font-medium rounded-lg px-2.5 py-1.5 text-xs border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
                 title="Tasks (Ctrl+T)"
               >
-                <ListTodo className="w-4 h-4 shrink-0" aria-hidden />
-                Tasks
+                <ListTodo className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">Tasks</span>
               </Link>
               <Link
                 to="/admin/users"
-                className="inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius)] px-3 py-1.5 text-xs border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 font-medium rounded-lg px-2.5 py-1.5 text-xs border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
                 title="Team (Ctrl+U)"
               >
-                <Users className="w-4 h-4 shrink-0" aria-hidden />
-                Team
+                <Users className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">Team</span>
               </Link>
             </div>
 
             {/* Admin Tools */}
-            <div className="flex items-center gap-1 border-l border-[var(--border)] pl-2 ml-2">
+            <div className="flex items-center gap-1.5 border-l border-[var(--border)] pl-2.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -650,11 +667,12 @@ export function AdminDashboardPage() {
                 leftIcon={Settings}
                 title="Reset demo data"
               >
-                Reset Demo
+                <span className="hidden sm:inline">Reset Demo</span>
+                <span className="sm:hidden">Reset</span>
               </Button>
               <Link
                 to="/admin/dev-tools"
-                className="inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius)] px-3 py-1.5 text-xs text-[var(--fg-muted)] hover:bg-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 font-medium rounded-lg px-2.5 py-1.5 text-xs text-[var(--fg-muted)] hover:bg-[var(--muted)] hover:text-[var(--fg)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 transition-colors"
                 title="Developer tools"
               >
                 Dev Tools
@@ -664,185 +682,6 @@ export function AdminDashboardPage() {
         }
       />
 
-      {/* Advanced Search and Filters - Mobile Optimized */}
-      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-row sm:gap-4 mb-6">
-        <div className="flex-1 relative">
-          <div className="relative">
-            <label htmlFor="dashboard-search" className="sr-only">
-              Search projects, tasks, and users
-            </label>
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--fg-muted)]"
-              aria-hidden="true"
-            />
-            <input
-              id="dashboard-search"
-              type="search"
-              placeholder="Search projects, tasks, users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 sm:pr-4 py-2.5 text-sm sm:text-base border border-[var(--border)] rounded-lg bg-[var(--card)] text-[var(--fg)] placeholder-[var(--fg-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--border-focus)] transition-colors"
-              aria-describedby="search-results-count"
-              autoComplete="off"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors sm:hidden"
-                aria-label="Clear search"
-                type="button"
-              >
-                <X className="w-4 h-4" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 border rounded-lg transition-colors text-sm ${
-              showFilters
-                ? 'border-[var(--border-focus)] bg-[var(--muted)] text-[var(--fg)]'
-                : 'border-[var(--border)] bg-[var(--card)] text-[var(--fg-muted)] hover:bg-[var(--muted)]'
-            }`}
-          >
-            <SlidersHorizontal className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Filters</span>
-            {Object.values(filters).some(f => f !== 'all') && (
-              <span className="ml-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[var(--primary)] rounded-full"></span>
-            )}
-          </button>
-
-          <button
-            onClick={() => showToast({ title: 'Export Data', message: 'Data export feature coming soon!' })}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 border border-[var(--border)] bg-[var(--card)] text-[var(--fg-muted)] hover:bg-[var(--muted)] rounded-lg transition-colors text-sm"
-          >
-            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Filter Panel - Mobile Optimized */}
-      {showFilters && (
-        <Card className="p-3 sm:p-4 mb-6 border-2 border-dashed border-[var(--border)]">
-          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--fg-muted)] mb-1.5 sm:mb-2">
-                Date Range
-              </label>
-              <select
-                value={filters.dateRange}
-                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              >
-                <option value="all">All time</option>
-                <option value="today">Today</option>
-                <option value="week">This week</option>
-                <option value="month">This month</option>
-                <option value="quarter">This quarter</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--fg-muted)] mb-1.5 sm:mb-2">
-                Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              >
-                <option value="all">All statuses</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On hold</option>
-                <option value="todo">To do</option>
-                <option value="in-progress">In progress</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--fg-muted)] mb-1.5 sm:mb-2">
-                Department
-              </label>
-              <select
-                value={filters.department}
-                onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
-                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              >
-                <option value="all">All departments</option>
-                <option value="DEV">Development</option>
-                <option value="PRESALES">Presales</option>
-                <option value="TESTER">Testing</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--fg-muted)] mb-1.5 sm:mb-2">
-                Priority
-              </label>
-              <select
-                value={filters.priority}
-                onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full px-2.5 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              >
-                <option value="all">All priorities</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-[var(--border)]">
-            <div className="flex items-center gap-2">
-              {Object.values(filters).some(f => f !== 'all') && (
-                <button
-                  onClick={() => setFilters({ dateRange: 'all', status: 'all', department: 'all', priority: 'all' })}
-                  className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium"
-                >
-                  Clear all filters
-                </button>
-              )}
-              <span className="text-xs sm:text-sm text-[var(--fg-muted)]">
-                {Object.values(filters).filter(f => f !== 'all').length} filter{Object.values(filters).filter(f => f !== 'all').length !== 1 ? 's' : ''} applied
-              </span>
-            </div>
-
-            <button
-              onClick={() => setShowFilters(false)}
-              className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors self-end sm:self-auto"
-            >
-              Hide filters
-            </button>
-          </div>
-        </Card>
-      )}
-
-      {/* Search Results Summary */}
-      {searchQuery && (
-        <div
-          className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className="flex items-center gap-2 text-blue-800">
-            <Search className="w-4 h-4" aria-hidden="true" />
-            <span className="text-sm font-medium">
-              Search results for "{searchQuery}"
-            </span>
-          </div>
-          <p
-            className="text-sm text-blue-700 mt-1"
-            id="search-results-count"
-          >
-            Found {filteredProjects.length} projects, {filteredTasks.length} tasks, and {filteredUsers.length} users
-          </p>
-        </div>
-      )}
 
       {/* Enhanced Hero: Dynamic welcome + Priority alerts + Quick insights + Actions */}
       <div
@@ -900,10 +739,6 @@ export function AdminDashboardPage() {
                   <Sparkles className="w-4 h-4 text-[var(--primary)]" aria-hidden />
                   {timeGreeting} · {todayLabel}
                 </p>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                  <Activity className="w-3 h-3" />
-                  {productivityScore}% productive
-                </div>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-[var(--fg)] tracking-tight mb-1">
                 Dashboard Overview
@@ -955,14 +790,36 @@ export function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Tasks Due Today */}
-            <div className="flex items-center gap-4 rounded-xl border-2 border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm px-5 py-4 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-200 group cursor-pointer">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 shrink-0 group-hover:scale-110 transition-transform">
+            {/* Projects Due Within 14 Days */}
+            <div 
+              onClick={() => setShowProjectsModal(true)}
+              className="flex items-center gap-4 rounded-xl border-2 border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm px-5 py-4 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-200 group cursor-pointer"
+            >
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--warning-light)] text-[var(--warning)] shrink-0 group-hover:scale-110 transition-transform">
                 <Calendar className="w-6 h-6" aria-hidden />
               </div>
-              <div>
-                <span className="block text-2xl sm:text-3xl font-bold tabular-nums text-[var(--fg)]">{todayTasks.length}</span>
-                <span className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Due today</span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-2xl sm:text-3xl font-bold tabular-nums text-[var(--fg)]">
+                  {projectsDueWithin14Days.length}
+                </span>
+                {closestDeadlineProject ? (
+                  <>
+                    <span className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider block truncate" title={closestDeadlineProject.name}>
+                      {closestDeadlineProject.name}
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--warning)]">
+                      {closestDeadlineProject.daysUntilDeadline === 0 
+                        ? 'Due today' 
+                        : closestDeadlineProject.daysUntilDeadline === 1
+                        ? 'Due tomorrow'
+                        : `${closestDeadlineProject.daysUntilDeadline} days left`}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
+                    Due within 14 days
+                  </span>
+                )}
               </div>
             </div>
 
@@ -1073,21 +930,8 @@ export function AdminDashboardPage() {
                     className="relative overflow-hidden rounded-xl border-2 border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-focus)] transition-all duration-300 h-full group-hover:-translate-y-1"
                     style={{ background: bg }}
                   >
-                    {/* Mini chart background */}
-                    <div className="absolute top-0 right-0 w-20 h-12 opacity-10">
-                      <svg viewBox="0 0 80 48" className="w-full h-full">
-                        <path
-                          d={`M 0 ${48 - (chartData[0] / Math.max(...chartData) * 40)} ${chartData.map((point, i) =>
-                            `L ${i * 11.5} ${48 - (point / Math.max(...chartData) * 40)}`
-                          ).join(' ')} L 80 48 Z`}
-                          fill="currentColor"
-                          stroke="none"
-                        />
-                      </svg>
-                    </div>
-
-                    <div className="relative z-10 p-4 sm:p-5">
-                      <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-1">{label}</p>
                           <p className="text-2xl sm:text-3xl font-bold tabular-nums truncate" style={{ color: accent }}>
@@ -1097,41 +941,6 @@ export function AdminDashboardPage() {
                         <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" style={{ background: accent, color: 'white' }}>
                           <Icon className="w-5 h-5" aria-hidden />
                         </div>
-                      </div>
-
-                      {/* Trend indicator */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          {isPositive ? (
-                            <TrendingUp className="w-3 h-3 text-green-600" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 text-red-600" />
-                          )}
-                          <span className={`text-xs font-medium tabular-nums ${
-                            isPositive ? 'text-green-700' : 'text-red-700'
-                          }`}>
-                            {isPositive ? '+' : ''}{trend.change}%
-                          </span>
-                        </div>
-                        <span className="text-xs text-[var(--fg-muted)]">{trend.period}</span>
-                      </div>
-
-                      {/* Mini sparkline */}
-                      <div className="mt-3 h-8 flex items-end gap-0.5">
-                        {chartData.slice(-5).map((point, i) => {
-                          const height = (point / Math.max(...chartData)) * 32;
-                          return (
-                            <div
-                              key={i}
-                              className="flex-1 rounded-sm transition-all duration-300 group-hover:opacity-80"
-                              style={{
-                                height: `${Math.max(height, 2)}px`,
-                                background: accent,
-                                opacity: 0.7
-                              }}
-                            />
-                          );
-                        })}
                       </div>
                     </div>
                   </MotionCard>
@@ -1172,100 +981,58 @@ export function AdminDashboardPage() {
               const trend = kpiTrends[key];
               const chartData = getMiniChartData(kpis[key], trend);
               const isPositive = trend.change >= 0;
+              const isOverdueCard = key === 'overdueTasks';
 
               return (
-                <Link key={key} to="/admin/tasks" className="block group">
-                  <MotionCard
-                    asListItem
-                    className="relative overflow-hidden rounded-xl border-2 border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-focus)] transition-all duration-300 h-full group-hover:-translate-y-1"
-                    style={{ background: bg }}
-                  >
-                    {/* Mini chart background */}
-                    <div className="absolute top-0 right-0 w-20 h-12 opacity-10">
-                      <svg viewBox="0 0 80 48" className="w-full h-full">
-                        <path
-                          d={`M 0 ${48 - (chartData[0] / Math.max(...chartData) * 40)} ${chartData.map((point, i) =>
-                            `L ${i * 11.5} ${48 - (point / Math.max(...chartData) * 40)}`
-                          ).join(' ')} L 80 48 Z`}
-                          fill="currentColor"
-                          stroke="none"
-                        />
-                      </svg>
-                    </div>
-
-                    <div className="relative z-10 p-4 sm:p-5">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-1">{label}</p>
-                          <p className="text-2xl sm:text-3xl font-bold tabular-nums truncate" style={{ color: accent }}>
-                            {kpis[key]}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" style={{ background: accent, color: 'white' }}>
-                          <Icon className={`w-5 h-5 ${key === 'tasksInProgress' ? 'animate-spin' : ''}`} aria-hidden />
-                        </div>
-                      </div>
-
-                      {/* Trend indicator */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1">
-                          {isPositive ? (
-                            <TrendingUp className="w-3 h-3 text-green-600" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 text-red-600" />
-                          )}
-                          <span className={`text-xs font-medium tabular-nums ${
-                            isPositive ? 'text-green-700' : 'text-red-700'
-                          }`}>
-                            {isPositive ? '+' : ''}{trend.change}%
-                          </span>
-                        </div>
-                        <span className="text-xs text-[var(--fg-muted)]">{trend.period}</span>
-                      </div>
-
-                      {/* Progress bar for completion rate */}
-                      {key === 'tasksCompleted' && (
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[var(--fg-muted)]">Completion rate</span>
-                            <span className="font-medium" style={{ color: accent }}>
-                              {Math.round((completedCount / totalForBars) * 100)}%
-                            </span>
+                <div
+                  key={key}
+                  onClick={isOverdueCard ? () => setShowOverdueTasksModal(true) : undefined}
+                  className={isOverdueCard ? 'cursor-pointer' : ''}
+                >
+                  {isOverdueCard ? (
+                    <MotionCard
+                      asListItem
+                      className="relative overflow-hidden rounded-xl border-2 border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-focus)] transition-all duration-300 h-full group hover:-translate-y-1"
+                      style={{ background: bg }}
+                    >
+                      <div className="p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-1">{label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold tabular-nums truncate" style={{ color: accent }}>
+                              {kpis[key]}
+                            </p>
                           </div>
-                          <div className="h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${(completedCount / totalForBars) * 100}%`,
-                                background: accent
-                              }}
-                            />
+                          <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" style={{ background: accent, color: 'white' }}>
+                            <Icon className="w-5 h-5" aria-hidden />
                           </div>
                         </div>
-                      )}
-
-                      {/* Mini sparkline for other metrics */}
-                      {key !== 'tasksCompleted' && (
-                        <div className="h-6 flex items-end gap-0.5">
-                          {chartData.slice(-5).map((point, i) => {
-                            const height = (point / Math.max(...chartData)) * 24;
-                            return (
-                              <div
-                                key={i}
-                                className="flex-1 rounded-sm transition-all duration-300 group-hover:opacity-80"
-                                style={{
-                                  height: `${Math.max(height, 2)}px`,
-                                  background: accent,
-                                  opacity: 0.7
-                                }}
-                              />
-                            );
-                          })}
+                      </div>
+                    </MotionCard>
+                  ) : (
+                    <Link to="/admin/tasks" className="block group">
+                      <MotionCard
+                        asListItem
+                        className="relative overflow-hidden rounded-xl border-2 border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:border-[var(--border-focus)] transition-all duration-300 h-full group-hover:-translate-y-1"
+                        style={{ background: bg }}
+                      >
+                        <div className="p-4 sm:p-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-1">{label}</p>
+                              <p className="text-2xl sm:text-3xl font-bold tabular-nums truncate" style={{ color: accent }}>
+                                {kpis[key]}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" style={{ background: accent, color: 'white' }}>
+                              <Icon className={`w-5 h-5 ${key === 'tasksInProgress' ? 'animate-spin' : ''}`} aria-hidden />
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </MotionCard>
-                </Link>
+                      </MotionCard>
+                    </Link>
+                  )}
+                </div>
               );
             })
           )}
@@ -1470,109 +1237,267 @@ export function AdminDashboardPage() {
             </Card>
           </div>
 
-          {/* Recent Activity & Pending Items */}
-          <div className="lg:col-span-2 space-y-6">
-          {/* Pending Approvals/Reviews */}
-          <Card className="p-4 sm:p-6 order-1 lg:order-2">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="font-semibold text-[var(--fg)] flex items-center gap-2">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--warning)]" />
-                  Pending Actions
-                </h3>
-                <span className="text-xs text-[var(--fg-muted)] bg-[var(--muted)] px-2 py-1 rounded-full">
-                  {overdueTasks.length + urgentTasks.length} items
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {overdueTasks.length > 0 && (
-                  <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-red-900">
-                        {overdueTasks.length} overdue task{overdueTasks.length > 1 ? 's' : ''}
-                      </p>
-                      <p className="text-xs text-red-700">Require immediate attention</p>
-                    </div>
-                    <Link
-                      to="/admin/tasks"
-                      className="text-xs font-medium text-red-700 hover:text-red-900 underline"
-                    >
-                      View tasks →
-                    </Link>
-                  </div>
-                )}
-
-                {urgentTasks.length > 0 && (
-                  <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                    <Timer className="w-5 h-5 text-orange-600 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-orange-900">
-                        {urgentTasks.length} due today
-                      </p>
-                      <p className="text-xs text-orange-700">Complete before end of day</p>
-                    </div>
-                    <Link
-                      to="/admin/tasks"
-                      className="text-xs font-medium text-orange-700 hover:text-orange-900 underline"
-                    >
-                      View tasks →
-                    </Link>
-                  </div>
-                )}
-
-                {overdueTasks.length === 0 && urgentTasks.length === 0 && (
-                  <div className="text-center py-8">
-                    <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-[var(--fg)]">All caught up!</p>
-                    <p className="text-xs text-[var(--fg-muted)]">No pending actions at this time</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Workflow Efficiency Metrics */}
-            <Card className="p-4 sm:p-6 order-3">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="font-semibold text-[var(--fg)] flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--success)]" />
-                  Workflow Efficiency
-                </h3>
-                <span className="text-xs text-[var(--fg-muted)] bg-[var(--muted)] px-2 py-1 rounded-full">
-                  Last 7 days
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div className="text-center p-2 sm:p-3">
-                  <div className="text-lg sm:text-2xl font-bold text-[var(--success)] tabular-nums">
-                    {Math.round((completedCount / Math.max(totalForBars, 1)) * 100)}%
-                  </div>
-                  <div className="text-xs text-[var(--fg-muted)] mt-1">Completion Rate</div>
-                </div>
-                <div className="text-center p-2 sm:p-3">
-                  <div className="text-lg sm:text-2xl font-bold text-[var(--info)] tabular-nums">
-                    {Math.round((inProgressCount / Math.max(totalForBars, 1)) * 100)}%
-                  </div>
-                  <div className="text-xs text-[var(--fg-muted)] mt-1">In Progress</div>
-                </div>
-                <div className="text-center p-2 sm:p-3">
-                  <div className="text-lg sm:text-2xl font-bold text-[var(--warning)] tabular-nums">
-                    {Math.round((todoCount / Math.max(totalForBars, 1)) * 100)}%
-                  </div>
-                  <div className="text-xs text-[var(--fg-muted)] mt-1">Backlog</div>
-                </div>
-                <div className="text-center p-2 sm:p-3">
-                  <div className="text-lg sm:text-2xl font-bold text-[var(--primary)] tabular-nums">
-                    {Math.round((completedCount / Math.max(activeUsers.length, 1)) * 10) / 10}
-                  </div>
-                  <div className="text-xs text-[var(--fg-muted)] mt-1">Per Team Member</div>
-                </div>
-              </div>
-            </Card>
-          </div>
         </div>
       </section>
+
+      {/* Projects Due Within 14 Days Modal */}
+      <MotionModal
+        open={showProjectsModal}
+        onClose={() => setShowProjectsModal(false)}
+        title="Projects Due Within 14 Days"
+      >
+        <div className="max-h-[60vh] overflow-y-auto">
+          {projectsDueWithin14Days.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="w-12 h-12 text-[var(--fg-muted)] mx-auto mb-3" />
+              <p className="text-sm font-medium text-[var(--fg)]">No projects due within 14 days</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">All projects have deadlines beyond 14 days.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {projectsDueWithin14Days.map((project) => {
+                const deadlineDate = new Date(project.endDate);
+                const isToday = project.daysUntilDeadline === 0;
+                const isTomorrow = project.daysUntilDeadline === 1;
+                
+                return (
+                  <Link
+                    key={project.id}
+                    to={`/admin/projects/${project.id}`}
+                    onClick={() => setShowProjectsModal(false)}
+                    className="flex items-start gap-4 p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--hover)] hover:border-[var(--border-focus)] hover:shadow-[var(--shadow-sm)] transition-all duration-200 group"
+                  >
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${
+                      isToday 
+                        ? 'bg-[var(--danger-light)] text-[var(--danger)]' 
+                        : isTomorrow
+                        ? 'bg-[var(--warning-light)] text-[var(--warning)]'
+                        : 'bg-[var(--primary-light)] text-[var(--primary)]'
+                    }`}>
+                      <FolderKanban className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-[var(--fg)] group-hover:text-[var(--primary)] transition-colors truncate">
+                            {project.name}
+                          </h4>
+                          {project.description && (
+                            <p className="text-sm text-[var(--fg-muted)] mt-1 line-clamp-2">
+                              {project.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                            isToday
+                              ? 'bg-[var(--danger-light)] text-[var(--danger)]'
+                              : isTomorrow
+                              ? 'bg-[var(--warning-light)] text-[var(--warning)]'
+                              : 'bg-[var(--primary-light)] text-[var(--primary)]'
+                          }`}>
+                            {isToday 
+                              ? 'Due Today' 
+                              : isTomorrow
+                              ? 'Due Tomorrow'
+                              : `${project.daysUntilDeadline} days left`}
+                          </span>
+                          <span className="text-xs text-[var(--fg-muted)]">
+                            {deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          project.status === 'ACTIVE'
+                            ? 'bg-[var(--success-light)] text-[var(--success)]'
+                            : project.status === 'ON_HOLD'
+                            ? 'bg-[var(--warning-light)] text-[var(--warning)]'
+                            : 'bg-[var(--muted)] text-[var(--fg-muted)]'
+                        }`}>
+                          {project.status === 'ACTIVE' ? 'Active' : project.status === 'ON_HOLD' ? 'On Hold' : 'Completed'}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[var(--fg-muted)] group-hover:text-[var(--primary)] group-hover:translate-x-1 transition-all shrink-0 mt-1" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </MotionModal>
+
+      {/* Overdue Tasks Modal */}
+      <MotionModal
+        open={showOverdueTasksModal}
+        onClose={() => setShowOverdueTasksModal(false)}
+        title="Overdue Tasks"
+      >
+        <div className="max-h-[70vh] overflow-y-auto">
+          {overdueTasks.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle2 className="w-12 h-12 text-[var(--success)] mx-auto mb-3" />
+              <p className="text-sm font-medium text-[var(--fg)]">No overdue tasks</p>
+              <p className="text-xs text-[var(--fg-muted)] mt-1">All tasks are up to date!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {overdueTasks.map((task) => {
+                const deadlineDate = new Date(task.deadline);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const deadline = new Date(deadlineDate);
+                deadline.setHours(0, 0, 0, 0);
+                const daysOverdue = Math.ceil((today - deadline) / (1000 * 60 * 60 * 24));
+                
+                const assignedUser = users.find(u => u.id === task.assigneeId);
+                const project = projects.find(p => p.id === task.projectId);
+                
+                const priorityColors = {
+                  HIGH: 'bg-[var(--danger-light)] text-[var(--danger)] border-[var(--danger-muted)]',
+                  MEDIUM: 'bg-[var(--warning-light)] text-[var(--warning)] border-[var(--warning-muted)]',
+                  LOW: 'bg-[var(--info-light)] text-[var(--info)] border-[var(--info-muted)]',
+                };
+                
+                const statusColors = {
+                  TODO: 'bg-[var(--warning-light)] text-[var(--warning)]',
+                  IN_PROGRESS: 'bg-[var(--info-light)] text-[var(--info)]',
+                  COMPLETED: 'bg-[var(--success-light)] text-[var(--success)]',
+                };
+
+                return (
+                  <div
+                    key={task.id}
+                    className="p-5 rounded-xl border-2 border-[var(--danger-muted)] bg-[var(--card)] hover:bg-[var(--hover)] hover:border-[var(--danger)] hover:shadow-[var(--shadow-md)] transition-all duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--danger-light)] text-[var(--danger)] shrink-0">
+                            <AlertTriangle className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-[var(--fg)] mb-1 truncate">
+                              {task.title}
+                            </h4>
+                            {task.description && (
+                              <p className="text-sm text-[var(--fg-muted)] line-clamp-2">
+                                {task.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-[var(--danger-light)] text-[var(--danger)] border border-[var(--danger-muted)]">
+                          {daysOverdue === 1 ? '1 day overdue' : `${daysOverdue} days overdue`}
+                        </span>
+                        <span className="text-xs text-[var(--fg-muted)]">
+                          Due: {deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-2">Status</p>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[task.status] || statusColors.TODO}`}>
+                          {task.status === 'TODO' ? 'To Do' : task.status === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-2">Priority</p>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${priorityColors[task.priority] || priorityColors.MEDIUM}`}>
+                          {task.priority}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-2">Assigned To</p>
+                        <div className="flex items-center gap-2">
+                          {assignedUser ? (
+                            <>
+                              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--primary-muted)] text-[var(--primary-muted-fg)] text-xs font-semibold">
+                                {assignedUser.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-sm text-[var(--fg)]">{assignedUser.name}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-[var(--fg-muted)]">Unassigned</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-2">Project</p>
+                        {project ? (
+                          <Link
+                            to={`/admin/projects/${project.id}`}
+                            onClick={() => setShowOverdueTasksModal(false)}
+                            className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] hover:underline inline-flex items-center gap-1"
+                          >
+                            {project.name}
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-[var(--fg-muted)]">No project</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-wider mb-2">Tags</p>
+                        <div className="flex flex-wrap gap-2">
+                          {task.tags.map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--muted)] text-[var(--fg-muted)]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-[var(--border)]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {task.createdAt && (
+                          <div>
+                            <span className="text-[var(--fg-muted)]">Created: </span>
+                            <span className="text-[var(--fg-secondary)]">
+                              {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                        )}
+                        {task.assignedAt && (
+                          <div>
+                            <span className="text-[var(--fg-muted)]">Assigned: </span>
+                            <span className="text-[var(--fg-secondary)]">
+                              {new Date(task.assignedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <Link
+                        to={`/admin/tasks`}
+                        onClick={() => setShowOverdueTasksModal(false)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--primary)] text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] transition-colors"
+                      >
+                        View Task Details
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </MotionModal>
     </MotionPage>
   );
 }

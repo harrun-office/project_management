@@ -25,31 +25,31 @@ import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
 // Status-based themes with gradients and colors
 const STATUS_THEMES = {
   ACTIVE: {
-    bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
-    border: 'border-emerald-200',
-    shadow: 'shadow-emerald-100/50',
+    bg: 'bg-[var(--success-light)]',
+    border: 'border-[var(--success-muted)]',
+    shadow: 'shadow-[var(--shadow-sm)]',
     icon: PlayCircle,
-    iconColor: 'text-emerald-600',
-    labelColor: 'text-emerald-700',
-    progressColor: 'bg-emerald-500'
+    iconColor: 'text-[var(--success)]',
+    labelColor: 'text-[var(--success-muted-fg)]',
+    progressColor: 'bg-[var(--success)]'
   },
   ON_HOLD: {
-    bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
-    border: 'border-amber-200',
-    shadow: 'shadow-amber-100/50',
+    bg: 'bg-[var(--warning-light)]',
+    border: 'border-[var(--warning-muted)]',
+    shadow: 'shadow-[var(--shadow-sm)]',
     icon: PauseCircle,
-    iconColor: 'text-amber-600',
-    labelColor: 'text-amber-700',
-    progressColor: 'bg-amber-500'
+    iconColor: 'text-[var(--warning)]',
+    labelColor: 'text-[var(--warning-muted-fg)]',
+    progressColor: 'bg-[var(--warning)]'
   },
   COMPLETED: {
-    bg: 'bg-gradient-to-br from-slate-50 to-gray-50',
-    border: 'border-slate-200',
-    shadow: 'shadow-slate-100/50',
+    bg: 'bg-[var(--muted)]',
+    border: 'border-[var(--border)]',
+    shadow: 'shadow-[var(--shadow-sm)]',
     icon: CheckCircle2,
-    iconColor: 'text-slate-600',
-    labelColor: 'text-slate-700',
-    progressColor: 'bg-slate-500'
+    iconColor: 'text-[var(--fg-muted)]',
+    labelColor: 'text-[var(--fg-muted)]',
+    progressColor: 'bg-[var(--fg-muted)]'
   }
 };
 
@@ -138,9 +138,9 @@ export function ProjectCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`group relative ${theme.bg} ${theme.border} border-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden ${
+      className={`group relative ${theme.bg} ${theme.border} border-2 rounded-xl shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-300 overflow-hidden ${
         compact ? 'p-4' : 'p-6'
-      } ${selected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`}
+      } ${selected ? 'ring-2 ring-[var(--primary)] ring-offset-2' : ''}`}
     >
       {/* Status indicator stripe */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${theme.progressColor}`} />
@@ -155,8 +155,8 @@ export function ProjectCard({
             }}
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
               selected
-                ? 'bg-blue-500 border-blue-500 text-white'
-                : 'border-gray-300 hover:border-blue-400'
+                ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-fg)]'
+                : 'border-[var(--border)] hover:border-[var(--primary)]'
             }`}
             aria-label={selected ? 'Deselect project' : 'Select project'}
           >
@@ -175,13 +175,13 @@ export function ProjectCard({
           <div className="flex-1 min-w-0">
             <Link
               to={`/admin/projects/${project.id}`}
-              className="block group-hover:text-blue-600 transition-colors"
+              className="block group-hover:text-[var(--primary)] transition-colors"
             >
-              <h3 className="font-semibold text-gray-900 truncate group-hover:underline">
+              <h3 className="font-semibold text-[var(--fg)] truncate group-hover:underline">
                 {project.name}
               </h3>
             </Link>
-            <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+            <p className="text-sm text-[var(--fg-muted)] line-clamp-2 mt-1">
               {project.description}
             </p>
           </div>
@@ -255,42 +255,44 @@ export function ProjectCard({
         </div>
       </div>
 
-      {/* Progress Section */}
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Progress</span>
-          <span className="font-medium text-gray-900">{progress}%</span>
+      {/* Progress Section - Hidden when project is on hold */}
+      {project.status !== 'ON_HOLD' && (
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-[var(--fg-muted)]">Progress</span>
+            <span className="font-medium text-[var(--fg)]">{progress}%</span>
+          </div>
+          <div className="w-full bg-[var(--muted)] rounded-full h-2 overflow-hidden">
+            <motion.div
+              className={`h-full ${theme.progressColor}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            />
+          </div>
         </div>
-        <div className="w-full bg-white/60 rounded-full h-2 overflow-hidden">
-          <motion.div
-            className={`h-full ${theme.progressColor}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Timeline Status */}
       <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-4 h-4 text-gray-500" />
+        <Calendar className="w-4 h-4 text-[var(--fg-muted)]" />
         <div className="flex-1">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">
+            <span className="text-[var(--fg-muted)]">
               {formatDate(project.startDate)} - {formatDate(project.endDate)}
             </span>
             {timelineStatus.status === 'overdue' && (
-              <span className="text-red-600 font-medium">
+              <span className="text-[var(--danger)] font-medium">
                 {timelineStatus.days} days overdue
               </span>
             )}
             {timelineStatus.status === 'upcoming' && (
-              <span className="text-blue-600 font-medium">
+              <span className="text-[var(--info)] font-medium">
                 Starts in {timelineStatus.days} days
               </span>
             )}
             {timelineStatus.status === 'in-progress' && (
-              <span className="text-gray-600">
+              <span className="text-[var(--fg-muted)]">
                 {timelineStatus.progress}% through timeline
               </span>
             )}
@@ -301,24 +303,24 @@ export function ProjectCard({
       {/* Team Members */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-gray-500" />
+          <Users className="w-4 h-4 text-[var(--fg-muted)]" />
           <div className="flex -space-x-1">
             {assignedUsers.slice(0, 3).map((user) => (
               <div
                 key={user.id}
-                className="w-6 h-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-700"
+                className="w-6 h-6 rounded-full bg-[var(--muted)] border-2 border-[var(--surface)] flex items-center justify-center text-xs font-medium text-[var(--fg)]"
                 title={user.name}
               >
                 {user.name.charAt(0).toUpperCase()}
               </div>
             ))}
             {assignedUsers.length > 3 && (
-              <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+              <div className="w-6 h-6 rounded-full bg-[var(--muted)] border-2 border-[var(--surface)] flex items-center justify-center text-xs font-medium text-[var(--fg-muted)]">
                 +{assignedUsers.length - 3}
               </div>
             )}
           </div>
-          <span className="text-sm text-gray-600 ml-1">
+          <span className="text-sm text-[var(--fg-muted)] ml-1">
             {assignedUsers.length} member{assignedUsers.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -326,7 +328,7 @@ export function ProjectCard({
       </div>
 
       {/* Hover overlay for better interaction feedback */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200 rounded-xl pointer-events-none" />
+      <div className="absolute inset-0 bg-[var(--fg)]/0 group-hover:bg-[var(--fg)]/5 transition-colors duration-200 rounded-xl pointer-events-none" />
     </motion.div>
   );
 }

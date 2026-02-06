@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { RequireAuth } from './components/auth/RequireAuth.jsx';
 import { SidebarProvider } from './context/SidebarContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 import { AdminLayout } from './components/layout/AdminLayout.jsx';
 import { AppLayout } from './components/layout/AppLayout.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
@@ -22,8 +23,9 @@ import './App.css';
 
 function App() {
   return (
-    <SidebarProvider>
-    <div className="flex flex-col min-h-screen bg-[var(--bg)]">
+    <ThemeProvider>
+      <SidebarProvider>
+        <div className="flex flex-col min-h-screen bg-[var(--bg)]">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -49,8 +51,9 @@ function App() {
           <Route path="notifications" element={<EmployeeNotificationsPage />} />
         </Route>
       </Routes>
-    </div>
-    </SidebarProvider>
+        </div>
+      </SidebarProvider>
+    </ThemeProvider>
   );
 }
 

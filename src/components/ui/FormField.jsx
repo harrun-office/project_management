@@ -67,8 +67,8 @@ export const FormField = forwardRef(({
     onBlur: handleBlur,
     onChange: handleChange,
     className: `${inputClassName} ${
-      hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' :
-      hasSuccess ? 'border-green-300 focus:border-green-500 focus:ring-green-500/20' :
+      hasError ? 'border-[var(--danger-muted)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20' :
+      hasSuccess ? 'border-[var(--success-muted)] focus:border-[var(--success)] focus:ring-[var(--success)]/20' :
       ''
     }`,
     'aria-invalid': hasError ? 'true' : 'false',
@@ -83,13 +83,13 @@ export const FormField = forwardRef(({
     <button
       type="button"
       onClick={() => setShowPassword(!showPassword)}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
       aria-label={showPassword ? 'Hide password' : 'Show password'}
     >
       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
     </button>
   ) : rightIcon ? (
-    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">
       {rightIcon}
     </div>
   ) : null;
@@ -100,17 +100,17 @@ export const FormField = forwardRef(({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-[var(--fg)]"
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-[var(--danger)] ml-1">*</span>}
         </label>
       )}
 
       {/* Input Container */}
       <div className="relative">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]">
             {leftIcon}
           </div>
         )}
@@ -135,11 +135,11 @@ export const FormField = forwardRef(({
               exit={{ opacity: 0, x: -10 }}
               className="flex items-start gap-2"
             >
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-[var(--danger)] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p
                   id={`${name}-error`}
-                  className="text-sm text-red-600"
+                  className="text-sm text-[var(--danger)]"
                   role="alert"
                 >
                   {displayError}
@@ -147,7 +147,7 @@ export const FormField = forwardRef(({
                 {suggestion && (
                   <p
                     id={`${name}-suggestion`}
-                    className="text-sm text-blue-600 mt-1"
+                    className="text-sm text-[var(--info)] mt-1"
                   >
                     💡 {suggestion}
                   </p>
@@ -166,8 +166,8 @@ export const FormField = forwardRef(({
               exit={{ opacity: 0, x: -10 }}
               className="flex items-center gap-2"
             >
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-green-600">{success}</span>
+              <CheckCircle2 className="w-4 h-4 text-[var(--success)]" />
+              <span className="text-sm text-[var(--success-muted-fg)]">{success}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -177,7 +177,7 @@ export const FormField = forwardRef(({
       {hint && !hasError && (
         <p
           id={`${name}-hint`}
-          className="text-sm text-gray-500"
+          className="text-sm text-[var(--fg-muted)]"
         >
           {hint}
         </p>
@@ -197,10 +197,10 @@ export function FormSection({ title, description, children, className = '' }) {
       {(title || description) && (
         <div>
           {title && (
-            <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+            <h3 className="text-lg font-medium text-[var(--fg)]">{title}</h3>
           )}
           {description && (
-            <p className="mt-1 text-sm text-gray-600">{description}</p>
+            <p className="mt-1 text-sm text-[var(--fg-muted)]">{description}</p>
           )}
         </div>
       )}

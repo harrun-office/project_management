@@ -10,27 +10,27 @@ import { Button } from '../../ui/Button.jsx';
 import { Skeleton } from '../../ui/Skeleton.jsx';
 
 const COLUMNS = [
-  { id: 'TODO', label: 'To Do', color: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-blue-100/50' },
-  { id: 'IN_PROGRESS', label: 'In Progress', color: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-amber-100/50' },
-  { id: 'COMPLETED', label: 'Completed', color: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 shadow-emerald-100/50' },
+  { id: 'TODO', label: 'To Do', color: 'bg-[var(--info-light)] border-[var(--info-muted)] shadow-[var(--shadow-sm)]' },
+  { id: 'IN_PROGRESS', label: 'In Progress', color: 'bg-[var(--warning-light)] border-[var(--warning-muted)] shadow-[var(--shadow-sm)]' },
+  { id: 'COMPLETED', label: 'Completed', color: 'bg-[var(--success-light)] border-[var(--success-muted)] shadow-[var(--shadow-sm)]' },
 ];
 
 // Enhanced project color palette with more sophisticated colors and gradients
 const PROJECT_COLORS = [
   // Frontend/UI Projects - Warm, creative colors
-  { bg: 'bg-gradient-to-br from-rose-50 to-pink-50', border: 'border-rose-200', shadow: 'shadow-rose-100/60', text: 'text-rose-700' },
-  { bg: 'bg-gradient-to-br from-orange-50 to-red-50', border: 'border-orange-200', shadow: 'shadow-orange-100/60', text: 'text-orange-700' },
-  { bg: 'bg-gradient-to-br from-amber-50 to-yellow-50', border: 'border-amber-200', shadow: 'shadow-amber-100/60', text: 'text-amber-700' },
+  { bg: 'bg-[var(--danger-light)]', border: 'border-[var(--danger-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--danger-muted-fg)]' },
+  { bg: 'bg-[var(--warning-light)]', border: 'border-[var(--warning-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--warning-muted-fg)]' },
+  { bg: 'bg-[var(--warning-light)]', border: 'border-[var(--warning-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--warning-muted-fg)]' },
 
   // Backend/API Projects - Cool, technical colors
-  { bg: 'bg-gradient-to-br from-blue-50 to-indigo-50', border: 'border-blue-200', shadow: 'shadow-blue-100/60', text: 'text-blue-700' },
-  { bg: 'bg-gradient-to-br from-cyan-50 to-teal-50', border: 'border-cyan-200', shadow: 'shadow-cyan-100/60', text: 'text-cyan-700' },
-  { bg: 'bg-gradient-to-br from-slate-50 to-gray-50', border: 'border-slate-200', shadow: 'shadow-slate-100/60', text: 'text-slate-700' },
+  { bg: 'bg-[var(--info-light)]', border: 'border-[var(--info-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--info-muted-fg)]' },
+  { bg: 'bg-[var(--info-light)]', border: 'border-[var(--info-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--info-muted-fg)]' },
+  { bg: 'bg-[var(--muted)]', border: 'border-[var(--border)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--fg-muted)]' },
 
   // Business/Sales Projects - Professional colors
-  { bg: 'bg-gradient-to-br from-emerald-50 to-green-50', border: 'border-emerald-200', shadow: 'shadow-emerald-100/60', text: 'text-emerald-700' },
-  { bg: 'bg-gradient-to-br from-purple-50 to-violet-50', border: 'border-purple-200', shadow: 'shadow-purple-100/60', text: 'text-purple-700' },
-  { bg: 'bg-gradient-to-br from-fuchsia-50 to-pink-50', border: 'border-fuchsia-200', shadow: 'shadow-fuchsia-100/60', text: 'text-fuchsia-700' },
+  { bg: 'bg-[var(--success-light)]', border: 'border-[var(--success-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--success-muted-fg)]' },
+  { bg: 'bg-[var(--purple-light)]', border: 'border-[var(--purple-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--purple-fg)]' },
+  { bg: 'bg-[var(--danger-light)]', border: 'border-[var(--danger-muted)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--danger-muted-fg)]' },
 ];
 
 /**
@@ -113,13 +113,13 @@ export function KanbanBoard({
     const overdue = isOverdue(task.deadline);
 
     if (overdue) {
-      return { status: 'overdue', text: `${Math.abs(days)} days overdue`, color: 'text-red-600 bg-red-50 border-red-200' };
+      return { status: 'overdue', text: `${Math.abs(days)} days overdue`, color: 'text-[var(--danger)] bg-[var(--danger-light)] border-[var(--danger-muted)]' };
     } else if (days === 0) {
-      return { status: 'due-today', text: 'Due today', color: 'text-orange-600 bg-orange-50 border-orange-200' };
+      return { status: 'due-today', text: 'Due today', color: 'text-[var(--warning)] bg-[var(--warning-light)] border-[var(--warning-muted)]' };
     } else if (days <= 2) {
-      return { status: 'due-soon', text: `Due in ${days} day${days > 1 ? 's' : ''}`, color: 'text-yellow-600 bg-yellow-50 border-yellow-200' };
+      return { status: 'due-soon', text: `Due in ${days} day${days > 1 ? 's' : ''}`, color: 'text-[var(--warning)] bg-[var(--warning-light)] border-[var(--warning-muted)]' };
     } else if (days <= 7) {
-      return { status: 'due-week', text: `Due in ${days} days`, color: 'text-blue-600 bg-blue-50 border-blue-200' };
+      return { status: 'due-week', text: `Due in ${days} days`, color: 'text-[var(--info)] bg-[var(--info-light)] border-[var(--info-muted)]' };
     }
     return null;
   }
@@ -131,7 +131,7 @@ export function KanbanBoard({
 
   function renderSkeletonCard() {
     return (
-      <div className="bg-white rounded-lg border-2 p-4 shadow-sm border-gray-100">
+      <div className="bg-[var(--surface)] rounded-lg border-2 p-4 shadow-[var(--shadow-sm)] border-[var(--border)]">
         <div className="flex items-center justify-between mb-3">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-4 w-16" />
@@ -158,18 +158,18 @@ export function KanbanBoard({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between"
+          className="bg-[var(--info-light)] border border-[var(--info-muted)] rounded-lg p-4 mb-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <CheckSquare className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">
+            <CheckSquare className="w-5 h-5 text-[var(--info)]" />
+            <span className="text-sm font-medium text-[var(--info-muted-fg)]">
               {selectedTasks.size} task{selectedTasks.size > 1 ? 's' : ''} selected
             </span>
           </div>
           <div className="flex items-center gap-2">
             <select
               onChange={(e) => onBulkStatusChange && onBulkStatusChange(e.target.value)}
-              className="text-sm border border-blue-300 rounded px-3 py-1 bg-white"
+              className="text-sm border border-[var(--info-muted)] rounded px-3 py-1 bg-[var(--surface)] text-[var(--fg)]"
               defaultValue=""
             >
               <option value="" disabled>Bulk actions...</option>
@@ -181,7 +181,7 @@ export function KanbanBoard({
               variant="ghost"
               size="sm"
               onClick={() => onClearSelection && onClearSelection()}
-              className="text-blue-700 hover:bg-blue-100"
+              className="text-[var(--info-muted-fg)] hover:bg-[var(--info-muted)]"
             >
               <X className="w-4 h-4 mr-1" />
               Clear
@@ -201,7 +201,7 @@ export function KanbanBoard({
                   {...provided.droppableProps}
                   className={`rounded-xl border-2 p-3 sm:p-4 min-h-[300px] sm:min-h-[400px] transition-colors duration-200 ${
                     col.color
-                  } ${snapshot.isDraggingOver ? 'ring-2 ring-blue-300' : ''}`}
+                  } ${snapshot.isDraggingOver ? 'ring-2 ring-[var(--primary)]' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -225,16 +225,16 @@ export function KanbanBoard({
                             });
                           }
                         }}
-                        className="flex items-center justify-center w-6 h-6 border-2 border-white/40 rounded-md hover:border-white/60 transition-colors bg-white/20 backdrop-blur-sm"
+                        className="flex items-center justify-center w-6 h-6 border-2 border-[var(--surface)]/40 rounded-md hover:border-[var(--surface)]/60 transition-colors bg-[var(--surface)]/20 backdrop-blur-sm"
                         aria-label={`Select all tasks in ${col.label}`}
                       >
                         {columnTasks.length > 0 && columnTasks.every(task => selectedTasks.has(task.id)) && (
-                          <CheckSquare className="w-4 h-4 text-white" />
+                          <CheckSquare className="w-4 h-4 text-[var(--fg)]" />
                         )}
                       </button>
-                      <h3 className="text-lg font-bold text-gray-900 drop-shadow-sm">{col.label}</h3>
+                      <h3 className="text-lg font-bold text-[var(--fg)] drop-shadow-sm">{col.label}</h3>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm text-gray-700 text-sm font-semibold px-3 py-1 rounded-full border border-white/40 shadow-sm">
+                    <div className="bg-[var(--surface)]/80 backdrop-blur-sm text-[var(--fg)] text-sm font-semibold px-3 py-1 rounded-full border border-[var(--surface)]/40 shadow-[var(--shadow-sm)]">
                       {columnTasks.length}
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export function KanbanBoard({
                         </div>
                       ))
                     ) : columnTasks.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-[var(--fg-muted)]">
                         {col.id === 'COMPLETED' ? (
                           <div className="space-y-2">
                             <div className="text-2xl">🎉</div>
@@ -263,7 +263,7 @@ export function KanbanBoard({
                       columnTasks.map((task, index) => {
                         const taskReadOnly = getTaskReadOnly ? getTaskReadOnly(task) : readOnly;
                         const deadlineStatus = getDeadlineStatus(task);
-                        const projectColor = projectColorMap[task.projectId] || { bg: 'bg-gray-100', border: 'border-gray-300', shadow: 'shadow-gray-100/50', text: 'text-gray-700' };
+                        const projectColor = projectColorMap[task.projectId] || { bg: 'bg-[var(--muted)]', border: 'border-[var(--border)]', shadow: 'shadow-[var(--shadow-sm)]', text: 'text-[var(--fg-muted)]' };
 
                         return (
                           <Draggable
@@ -279,9 +279,9 @@ export function KanbanBoard({
                                 className="group relative"
                               >
                                 <div
-                                  className={`bg-white/95 backdrop-blur-sm rounded-xl border-2 p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:scale-[1.02] ${projectColor.bg} ${projectColor.border} ${
-                                    snapshot.isDragging ? 'rotate-3 shadow-2xl scale-105' : ''
-                                  } ${selectedTasks.has(task.id) ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`}
+                                  className={`bg-[var(--surface)]/95 backdrop-blur-sm rounded-xl border-2 p-4 shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:scale-[1.02] ${projectColor.bg} ${projectColor.border} ${
+                                    snapshot.isDragging ? 'rotate-3 shadow-[var(--shadow-2xl)] scale-105' : ''
+                                  } ${selectedTasks.has(task.id) ? 'ring-2 ring-[var(--primary)] ring-offset-2' : ''}`}
                                   onClick={(e) => {
                                     // Don't navigate if clicking on interactive elements
                                     if (e.target.closest('button, select, input, textarea')) {
@@ -300,11 +300,11 @@ export function KanbanBoard({
                                           e.stopPropagation();
                                           onSelectTask && onSelectTask(task.id, !selectedTasks.has(task.id));
                                         }}
-                                        className="flex items-center justify-center w-5 h-5 border-2 border-gray-300 rounded hover:border-blue-400 transition-colors"
+                                        className="flex items-center justify-center w-5 h-5 border-2 border-[var(--border)] rounded hover:border-[var(--primary)] transition-colors"
                                         aria-label={`Select task ${task.title}`}
                                       >
                                         {selectedTasks.has(task.id) && (
-                                          <CheckSquare className="w-4 h-4 text-blue-600" />
+                                          <CheckSquare className="w-4 h-4 text-[var(--primary)]" />
                                         )}
                                       </button>
                                       <span className={`text-xs font-medium px-2 py-1 rounded-full border ${projectColor.text} ${projectColor.bg} ${projectColor.border}`}>
@@ -324,9 +324,9 @@ export function KanbanBoard({
                                       {!taskReadOnly && (
                                         <div
                                           {...provided.dragHandleProps}
-                                          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded opacity-60 group-hover:opacity-100 transition-opacity"
+                                          className="cursor-grab active:cursor-grabbing p-1 hover:bg-[var(--muted)] rounded opacity-60 group-hover:opacity-100 transition-opacity"
                                         >
-                                          <GripVertical className="w-4 h-4 text-gray-500" />
+                                          <GripVertical className="w-4 h-4 text-[var(--fg-muted)]" />
                                         </div>
                                       )}
 
@@ -350,14 +350,14 @@ export function KanbanBoard({
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className="absolute right-0 top-8 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                                                className="absolute right-0 top-8 z-10 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-[var(--shadow-lg)] py-1 min-w-[120px]"
                                               >
                                                 <button
                                                   onClick={() => {
                                                     onEdit && onEdit(task);
                                                     setQuickActionsTask(null);
                                                   }}
-                                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--fg)] hover:bg-[var(--muted)]"
                                                 >
                                                   <Edit className="w-4 h-4" />
                                                   Edit
@@ -368,7 +368,7 @@ export function KanbanBoard({
                                                     onMoveStatus && onMoveStatus(task.id, e.target.value);
                                                     setQuickActionsTask(null);
                                                   }}
-                                                  className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 border-none bg-transparent"
+                                                  className="w-full px-3 py-2 text-sm text-[var(--fg)] hover:bg-[var(--muted)] border-none bg-transparent"
                                                 >
                                                   <option value="TODO">Move to To Do</option>
                                                   <option value="IN_PROGRESS">Move to In Progress</option>
@@ -380,7 +380,7 @@ export function KanbanBoard({
                                                       onDelete(task);
                                                       setQuickActionsTask(null);
                                                     }}
-                                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--danger)] hover:bg-[var(--danger-light)]"
                                                   >
                                                     <Trash2 className="w-4 h-4" />
                                                     Delete
@@ -395,13 +395,13 @@ export function KanbanBoard({
                                   </div>
 
                                   {/* Task title */}
-                                  <h4 className="font-semibold text-gray-900 mb-2 leading-tight">
+                                  <h4 className="font-semibold text-[var(--fg)] mb-2 leading-tight">
                                     {task.title}
                                   </h4>
 
                                   {/* Task description preview */}
                                   {task.description && (
-                                    <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                                    <p className="text-sm text-[var(--fg-muted)] mb-3 leading-relaxed">
                                       {truncateText(task.description)}
                                     </p>
                                   )}
@@ -409,10 +409,10 @@ export function KanbanBoard({
                                   {/* Task metadata */}
                                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-700">
+                                      <div className="w-6 h-6 bg-[var(--muted)] rounded-full flex items-center justify-center text-xs font-medium text-[var(--fg)]">
                                         {getUserInitials(task.assigneeId)}
                                       </div>
-                                      <span className="text-sm text-gray-600">{getUserName(task.assigneeId)}</span>
+                                      <span className="text-sm text-[var(--fg-muted)]">{getUserName(task.assigneeId)}</span>
                                     </div>
                                     <PriorityBadge priority={task.priority} />
                                   </div>
@@ -421,13 +421,13 @@ export function KanbanBoard({
                                   {(task.tags || []).length > 0 && (
                                     <div className="flex flex-wrap gap-1 mb-3 max-h-16 overflow-hidden">
                                       {(task.tags || []).includes('Learning') && (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-1 text-xs font-medium">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--info-light)] text-[var(--info-muted-fg)] px-2 py-1 text-xs font-medium">
                                           <Tag className="w-3 h-3" />
                                           Learning
                                         </span>
                                       )}
                                       {(task.tags || []).filter((t) => t !== 'Learning').map((tag) => (
-                                        <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-800 px-2 py-1 text-xs font-medium">
+                                        <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-[var(--muted)] text-[var(--fg)] px-2 py-1 text-xs font-medium">
                                           <Tag className="w-3 h-3" />
                                           {tag}
                                         </span>
@@ -435,15 +435,39 @@ export function KanbanBoard({
                                     </div>
                                   )}
 
-                                  {/* Assigned date */}
-                                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                                    <Calendar className="w-3 h-3" />
-                                    Assigned: {task.assignedAt ? task.assignedAt.slice(0, 10) : '—'}
+                                  {/* Assigned date and Deadline */}
+                                  <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center gap-1 text-xs text-[var(--fg-muted)]">
+                                      <Calendar className="w-3 h-3" />
+                                      Assigned: {task.assignedAt ? task.assignedAt.slice(0, 10) : '—'}
+                                    </div>
+                                    {task.deadline && (
+                                      <div className={`flex items-center gap-1 text-xs ${
+                                        (() => {
+                                          const deadline = new Date(task.deadline);
+                                          const today = new Date();
+                                          today.setHours(0, 0, 0, 0);
+                                          deadline.setHours(0, 0, 0, 0);
+                                          const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                                          if (daysUntil < 0) {
+                                            return 'text-[var(--danger)] font-medium';
+                                          } else if (daysUntil === 0) {
+                                            return 'text-[var(--warning)] font-medium';
+                                          } else if (daysUntil <= 2) {
+                                            return 'text-[var(--warning)]';
+                                          }
+                                          return 'text-[var(--fg-muted)]';
+                                        })()
+                                      }`}>
+                                        <Calendar className="w-3 h-3" />
+                                        Deadline: {task.deadline.slice(0, 10)}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Read-only indicator */}
                                   {taskReadOnly && (
-                                    <div className="mt-2 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                                    <div className="mt-2 text-xs text-[var(--fg-muted)] bg-[var(--muted)] px-2 py-1 rounded">
                                       Read-only (Project is {projects.find(p => p.id === task.projectId)?.status?.toLowerCase()})
                                     </div>
                                   )}

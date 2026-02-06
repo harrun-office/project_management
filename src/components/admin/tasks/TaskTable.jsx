@@ -29,13 +29,14 @@ export function TaskTable({ tasks = [], users = [], projects = [], onEdit, onMov
             <th className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wider">Priority</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wider">Status</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wider">Assigned At</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wider">Deadline</th>
             <th className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-fg)] uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
         <tbody className="bg-[var(--card)] divide-y divide-[var(--border)]">
           {tasks.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-4 py-8 text-center text-[var(--muted-fg)]">
+              <td colSpan={8} className="px-4 py-8 text-center text-[var(--muted-fg)]">
                 No tasks match the filter.
               </td>
             </tr>
@@ -67,6 +68,27 @@ export function TaskTable({ tasks = [], users = [], projects = [], onEdit, onMov
                   <td className="px-4 py-3 text-sm text-[var(--fg-secondary)]">{statusLabels[task.status] ?? task.status}</td>
                   <td className="px-4 py-3 text-sm text-[var(--fg-secondary)]">
                     {task.assignedAt ? task.assignedAt.slice(0, 10) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-[var(--fg-secondary)]">
+                    {task.deadline ? (
+                      <span className={(() => {
+                        const deadline = new Date(task.deadline);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        deadline.setHours(0, 0, 0, 0);
+                        const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                        if (daysUntil < 0) {
+                          return 'text-[var(--danger)] font-medium';
+                        } else if (daysUntil === 0) {
+                          return 'text-[var(--warning)] font-medium';
+                        } else if (daysUntil <= 2) {
+                          return 'text-[var(--warning)]';
+                        }
+                        return '';
+                      })()}>
+                        {task.deadline.slice(0, 10)}
+                      </span>
+                    ) : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {!rowReadOnly ? (

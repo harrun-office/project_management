@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 /**
  * Circular progress ring component
  */
-export function ProgressRing({ percentage = 0, size = 80, strokeWidth = 8, color = 'text-blue-500' }) {
+export function ProgressRing({ percentage = 0, size = 80, strokeWidth = 8, color = 'text-[var(--primary)]' }) {
   const normalizedRadius = (size - strokeWidth) / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDasharray = `${circumference} ${circumference}`;
@@ -26,7 +26,7 @@ export function ProgressRing({ percentage = 0, size = 80, strokeWidth = 8, color
           r={normalizedRadius}
           cx={center}
           cy={center}
-          className="text-gray-200"
+          className="text-[var(--muted)]"
         />
         {/* Progress circle */}
         <circle
@@ -47,7 +47,7 @@ export function ProgressRing({ percentage = 0, size = 80, strokeWidth = 8, color
       </svg>
       {/* Percentage text */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-bold text-gray-700">
+        <span className="text-lg font-bold text-[var(--fg)]">
           {Math.round(percentage)}%
         </span>
       </div>

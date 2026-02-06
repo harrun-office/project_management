@@ -53,6 +53,7 @@ export function ProjectModal({ open, mode, project, onClose, onSuccess, onDelete
   function validate() {
     const err = {};
     if (!name.trim()) err.name = 'Project name is required';
+    if (!description.trim()) err.description = 'Description is required';
     if (!startDate) err.startDate = 'Start date is required';
     if (!endDate) err.endDate = 'End date is required';
     if (startDate && endDate && startDate > endDate) {
@@ -137,15 +138,18 @@ export function ProjectModal({ open, mode, project, onClose, onSuccess, onDelete
             />
           </Field>
 
-          <Field label="Description" htmlFor="project-desc">
+          <Field label="Description" htmlFor="project-desc" required>
             <textarea
               id="project-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-[var(--fg)] placeholder:text-[var(--muted-fg)] shadow-[var(--shadow-sm)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)]/20 focus:shadow-[var(--shadow)] transition-all duration-150"
-              placeholder="Optional description"
+              className={`w-full rounded-[var(--radius)] border bg-[var(--card)] px-3 py-2.5 text-[var(--fg)] placeholder:text-[var(--muted-fg)] shadow-[var(--shadow-sm)] focus:ring-2 focus:ring-[var(--ring)]/20 focus:shadow-[var(--shadow)] transition-all duration-150 ${
+                errors.description ? 'border-[var(--danger)] focus:border-[var(--danger)]' : 'border-[var(--border)] focus:border-[var(--accent)]'
+              }`}
+              placeholder="Project description"
             />
+            {errors.description && <p className="text-xs text-[var(--danger)] font-medium mt-1" role="alert">{errors.description}</p>}
           </Field>
 
           <div className="grid grid-cols-2 gap-4">

@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 /**
  * Mini bar chart component for trend visualization
  */
-export function MiniBarChart({ data = [], height = 40, color = 'bg-blue-500' }) {
+export function MiniBarChart({ data = [], height = 40, color = 'bg-[var(--primary)]' }) {
   if (!data || data.length === 0) {
     return (
       <div
         className="flex items-end justify-center space-x-1"
         style={{ height }}
       >
-        <div className="text-xs text-gray-400">No data</div>
+        <div className="text-xs text-[var(--fg-muted)]">No data</div>
       </div>
     );
   }

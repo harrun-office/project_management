@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { getSession, clearSession } from '../../store/sessionStore.js';
-import { getTheme, toggleTheme } from '../../store/themeStore.js';
+import { useTheme } from '../../context/ThemeContext.jsx';
 import { useSidebar } from '../../context/SidebarContext.jsx';
 import { Badge } from '../ui/Badge.jsx';
 
@@ -14,7 +14,8 @@ export function Topbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const session = getSession();
-  const isDark = getTheme() === 'dark';
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const { collapsed } = useSidebar();
   const roleLabel = session?.role === 'ADMIN' ? 'Admin' : 'Employee';
   const userInitial = session?.name?.charAt(0)?.toUpperCase() ?? '?';
@@ -28,7 +29,7 @@ export function Topbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 flex w-full flex-shrink-0 items-center border-b border-gray-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 shadow-sm animate-fadeIn"
+      className="sticky top-0 z-50 flex w-full flex-shrink-0 items-center border-b border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] animate-fadeIn"
       style={{ minHeight: HEADER_HEIGHT, height: HEADER_HEIGHT }}
       aria-label="App header"
     >
@@ -49,10 +50,10 @@ export function Topbar() {
           {/* Show Project Management text when sidebar is collapsed */}
           {collapsed && (
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-gray-900 tracking-tight">
+              <span className="text-lg font-bold text-[var(--fg)] tracking-tight">
                 Project Management
               </span>
-              <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">
+              <span className="text-xs text-[var(--fg-muted)] uppercase tracking-wider font-medium">
                 Enterprise
               </span>
             </div>
@@ -67,8 +68,8 @@ export function Topbar() {
           {/* Theme toggle */}
           <button
             type="button"
-            onClick={() => toggleTheme()}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-700 shadow-md transition-all duration-300 ease-out hover:border-gray-400 hover:bg-gray-200 hover:shadow-lg hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] shadow-[var(--shadow-sm)] transition-all duration-300 ease-out hover:border-[var(--border-focus)] hover:bg-[var(--hover)] hover:shadow-[var(--shadow-md)] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <svg

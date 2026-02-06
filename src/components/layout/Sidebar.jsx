@@ -21,8 +21,8 @@ function NavItem({ to, label, icon: Icon, basePath, unreadCount = 0, collapsed, 
       className={({ isActive: active }) =>
         `flex items-center gap-3 ${collapsed ? 'px-2 py-2 justify-center' : 'px-4 py-3'} text-sm font-medium border-l-4 transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           active
-            ? `bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-500 text-blue-700 shadow-md ring-1 ring-blue-200/50 ${collapsed ? 'rounded-lg' : ''}`
-            : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:translate-x-1 hover:shadow-sm'
+            ? `bg-[var(--primary-muted)] border-[var(--primary)] text-[var(--primary-muted-fg)] shadow-[var(--shadow-md)] ring-1 ring-[var(--primary)]/20 ${collapsed ? 'rounded-lg' : ''}`
+            : 'border-transparent text-[var(--fg-muted)] hover:bg-[var(--hover)] hover:text-[var(--fg)] hover:translate-x-1 hover:shadow-[var(--shadow-sm)]'
         }`
       }
       style={{
@@ -41,8 +41,8 @@ function NavItem({ to, label, icon: Icon, basePath, unreadCount = 0, collapsed, 
             {label}
           </span>
           {unreadCount > 0 && (
-            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold text-white animate-pulse transition-all duration-300 ${
-              isActive ? 'bg-red-600 shadow-lg scale-110' : 'bg-red-500'
+            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold text-[var(--danger-fg)] animate-pulse transition-all duration-300 ${
+              isActive ? 'bg-[var(--danger)] shadow-[var(--shadow-lg)] scale-110' : 'bg-[var(--danger)]'
             }`}
                   style={{ transitionDelay: `${delay + 100}ms` }}>
               {unreadCount > 99 ? '99+' : unreadCount}
@@ -59,10 +59,10 @@ function SidebarNavContent({ groups, basePath, unreadCount, collapsed, toggleCol
     <nav className="flex-1 overflow-y-auto" aria-label="Main navigation">
       {/* Hamburger menu button - positioned above dashboard */}
       {collapsed && (
-        <div className="px-4 py-2 border-b border-gray-200/60 animate-in slide-in-from-left-2 duration-300">
+        <div className="px-4 py-2 border-b border-[var(--border)] animate-in slide-in-from-left-2 duration-300">
           <button
             onClick={toggleCollapsed}
-            className="group flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 text-blue-600 hover:text-blue-700 hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 hover:shadow-md active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-sm"
+            className="group flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--primary-muted)] border border-[var(--primary)]/30 text-[var(--primary-muted-fg)] hover:text-[var(--primary)] hover:bg-[var(--primary-muted)] hover:border-[var(--primary)]/50 hover:shadow-[var(--shadow-md)] active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[var(--shadow-sm)]"
             title="Open sidebar"
             aria-label="Open sidebar"
           >
@@ -74,7 +74,7 @@ function SidebarNavContent({ groups, basePath, unreadCount, collapsed, toggleCol
       {groups.map((group, groupIndex) => (
         <div key={group.label} className="mb-8">
           {!collapsed && (
-            <h2 className={`mb-4 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            <h2 className={`mb-4 px-4 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               collapsed ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'
             }`}
                 style={{ transitionDelay: `${groupIndex * 100}ms` }}>
@@ -116,12 +116,12 @@ export function Sidebar() {
     : 0;
 
   return (
-    <aside className={`fixed left-0 top-0 h-screen bg-white border-r border-gray-200 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-xl ${
+    <aside className={`fixed left-0 top-0 h-screen bg-[var(--surface)] border-r border-[var(--border)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[var(--shadow-xl)] ${
       collapsed ? 'w-16' : 'w-64'
     }`}>
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="flex-shrink-0 pt-6 pb-4 px-4 border-b border-gray-200 relative">
+        <div className="flex-shrink-0 pt-6 pb-4 px-4 border-b border-[var(--border)] relative">
           <Link
             to={basePath}
             className="flex items-center gap-3 hover:opacity-80 transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -138,11 +138,11 @@ export function Sidebar() {
                      transform: collapsed ? 'translateX(-10px)' : 'translateX(0)',
                      transitionDelay: collapsed ? '0ms' : '100ms'
                    }}>
-                <span className="block text-sm font-semibold text-gray-900 truncate transition-all duration-300"
+                <span className="block text-sm font-semibold text-[var(--fg)] truncate transition-all duration-300"
                       style={{ transitionDelay: collapsed ? '0ms' : '150ms' }}>
                   Project Management
                 </span>
-                <span className="block text-xs text-gray-500 uppercase tracking-wide transition-all duration-300"
+                <span className="block text-xs text-[var(--fg-muted)] uppercase tracking-wide transition-all duration-300"
                       style={{ transitionDelay: collapsed ? '0ms' : '200ms' }}>
                   Enterprise
                 </span>
@@ -154,7 +154,7 @@ export function Sidebar() {
           {!collapsed && (
             <button
               onClick={() => collapsed || toggleCollapsed()}
-              className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200/60 text-gray-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200 hover:shadow-lg active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-sm animate-in fade-in slide-in-from-right-2 duration-300"
+              className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--surface)]/80 backdrop-blur-sm border border-[var(--border)] text-[var(--fg-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-light)] hover:border-[var(--danger-muted)] hover:shadow-[var(--shadow-lg)] active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[var(--shadow-sm)] animate-in fade-in slide-in-from-right-2 duration-300"
               title="Close sidebar"
               aria-label="Close sidebar"
             >

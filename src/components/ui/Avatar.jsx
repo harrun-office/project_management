@@ -44,7 +44,7 @@ export function Avatar({
 
   return (
     <div
-      className={`rounded-full bg-gray-300 flex items-center justify-center font-medium text-white ${sizeClasses[size]} ${className}`}
+      className={`rounded-full bg-[var(--muted)] flex items-center justify-center font-medium text-[var(--fg)] ${sizeClasses[size]} ${className}`}
       {...props}
     >
       {initials}

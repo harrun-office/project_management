@@ -54,28 +54,28 @@ export function ProjectMembersPanel({ project }) {
       {isReadOnly && <ReadOnlyBanner />}
 
       {validationError && (
-        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{validationError}</p>
+        <p className="text-sm text-[var(--danger)] bg-[var(--danger-light)] px-3 py-2 rounded">{validationError}</p>
       )}
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Assigned members</h3>
+        <h3 className="text-sm font-semibold text-[var(--fg)] mb-2">Assigned members</h3>
         {assignedMembers.length === 0 ? (
           <EmptyState title="No members assigned" message="Add members from the list below." />
         ) : (
-          <ul className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+          <ul className="border border-[var(--border)] rounded-lg divide-y divide-[var(--border)]">
             {assignedMembers.map((u) => (
               <li key={u.id} className="flex items-center justify-between px-4 py-3">
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">{u.name}</span>
-                  <span className="text-gray-500 ml-2">{u.email}</span>
-                  <span className="text-gray-400 ml-2">· {u.department ?? '—'}</span>
-                  <span className="text-gray-400 ml-2">· {u.role ?? '—'}</span>
+                  <span className="font-medium text-[var(--fg)]">{u.name}</span>
+                  <span className="text-[var(--fg-muted)] ml-2">{u.email}</span>
+                  <span className="text-[var(--fg-muted)] ml-2">· {u.department ?? '—'}</span>
+                  <span className="text-[var(--fg-muted)] ml-2">· {u.role ?? '—'}</span>
                 </div>
                 {!isReadOnly && (
                   <button
                     type="button"
                     onClick={() => handleRemove(u.id)}
-                    className="text-sm text-red-600 hover:underline"
+                    className="text-sm text-[var(--danger)] hover:underline"
                   >
                     Remove
                   </button>
@@ -88,17 +88,17 @@ export function ProjectMembersPanel({ project }) {
 
       {!isReadOnly && unassignedUsers.length > 0 && (
         <section>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Add members</h3>
-          <div className="border border-gray-200 rounded-lg px-4 py-3 max-h-48 overflow-y-auto space-y-2">
+          <h3 className="text-sm font-semibold text-[var(--fg)] mb-2">Add members</h3>
+          <div className="border border-[var(--border)] rounded-lg px-4 py-3 max-h-48 overflow-y-auto space-y-2">
             {unassignedUsers.map((u) => (
               <label key={u.id} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={selectedToAdd.includes(u.id)}
                   onChange={() => toggleAdd(u.id)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--ring)]"
                 />
-                <span className="text-sm">{u.name} ({u.email}) · {u.department ?? '—'}</span>
+                <span className="text-sm text-[var(--fg)]">{u.name} ({u.email}) · {u.department ?? '—'}</span>
               </label>
             ))}
           </div>
@@ -106,7 +106,7 @@ export function ProjectMembersPanel({ project }) {
             type="button"
             onClick={handleAddSelected}
             disabled={selectedToAdd.length === 0}
-            className="mt-2 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-2 px-3 py-1.5 text-sm bg-[var(--primary)] text-[var(--primary-fg)] rounded-lg hover:bg-[var(--primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add selected ({selectedToAdd.length})
           </button>

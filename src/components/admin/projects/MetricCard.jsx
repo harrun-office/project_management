@@ -19,28 +19,28 @@ export function MetricCard({
 }) {
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-700',
-      icon: 'text-blue-600'
+      bg: 'bg-[var(--info-light)]',
+      border: 'border-[var(--info-muted)]',
+      text: 'text-[var(--info-muted-fg)]',
+      icon: 'text-[var(--info)]'
     },
     green: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      text: 'text-green-700',
-      icon: 'text-green-600'
+      bg: 'bg-[var(--success-light)]',
+      border: 'border-[var(--success-muted)]',
+      text: 'text-[var(--success-muted-fg)]',
+      icon: 'text-[var(--success)]'
     },
     amber: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      text: 'text-amber-700',
-      icon: 'text-amber-600'
+      bg: 'bg-[var(--warning-light)]',
+      border: 'border-[var(--warning-muted)]',
+      text: 'text-[var(--warning-muted-fg)]',
+      icon: 'text-[var(--warning)]'
     },
     gray: {
-      bg: 'bg-gray-50',
-      border: 'border-gray-200',
-      text: 'text-gray-700',
-      icon: 'text-gray-600'
+      bg: 'bg-[var(--muted)]',
+      border: 'border-[var(--border)]',
+      text: 'text-[var(--fg-muted)]',
+      icon: 'text-[var(--fg-muted)]'
     }
   };
 
@@ -52,8 +52,8 @@ export function MetricCard({
   };
 
   const getTrendColor = () => {
-    if (!trend) return 'text-gray-500';
-    return trend === 'up' ? 'text-green-600' : 'text-red-600';
+    if (!trend) return 'text-[var(--fg-muted)]';
+    return trend === 'up' ? 'text-[var(--success)]' : 'text-[var(--danger)]';
   };
 
   const TrendIcon = getTrendIcon();
@@ -73,11 +73,11 @@ export function MetricCard({
           </div>
 
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-bold text-gray-900 tabular-nums">
+            <span className="text-2xl font-bold text-[var(--fg)] tabular-nums">
               {typeof value === 'number' ? value.toLocaleString() : value}
             </span>
             {subtitle && (
-              <span className="text-sm text-gray-600">{subtitle}</span>
+              <span className="text-sm text-[var(--fg-muted)]">{subtitle}</span>
             )}
           </div>
 

@@ -18,13 +18,13 @@ export function BulkActionsToolbar({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between"
+      className="bg-[var(--info-light)] border border-[var(--info-muted)] rounded-lg p-4 mb-4 flex items-center justify-between"
     >
       <div className="flex items-center gap-3">
-        <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center">
-          <CheckCircle2 className="w-3 h-3 text-white" />
+        <div className="w-5 h-5 bg-[var(--primary)] rounded flex items-center justify-center">
+          <CheckCircle2 className="w-3 h-3 text-[var(--primary-fg)]" />
         </div>
-        <span className="text-sm font-medium text-blue-900">
+        <span className="text-sm font-medium text-[var(--info-muted-fg)]">
           {selectedCount} project{selectedCount > 1 ? 's' : ''} selected
         </span>
       </div>
@@ -37,7 +37,7 @@ export function BulkActionsToolbar({
               e.target.value = ''; // Reset select
             }
           }}
-          className="text-sm border border-blue-300 rounded px-3 py-1 bg-white"
+          className="text-sm border border-[var(--info-muted)] rounded px-3 py-1 bg-[var(--surface)] text-[var(--fg)]"
           defaultValue=""
         >
           <option value="" disabled>Change status...</option>
@@ -50,7 +50,7 @@ export function BulkActionsToolbar({
           variant="outline"
           size="sm"
           onClick={onBulkDelete}
-          className="text-red-600 border-red-300 hover:bg-red-50"
+          className="text-[var(--danger)] border-[var(--danger-muted)] hover:bg-[var(--danger-light)]"
         >
           <Trash2 className="w-4 h-4 mr-1" />
           Delete
@@ -60,7 +60,7 @@ export function BulkActionsToolbar({
           variant="ghost"
           size="sm"
           onClick={onClearSelection}
-          className="text-blue-700 hover:bg-blue-100"
+          className="text-[var(--info-muted-fg)] hover:bg-[var(--info-muted)]"
         >
           <X className="w-4 h-4 mr-1" />
           Clear

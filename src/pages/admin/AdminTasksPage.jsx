@@ -33,6 +33,7 @@ export function AdminTasksPage() {
   const [filterAssignee, setFilterAssignee] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
   const [filterDate, setFilterDate] = useState(todayKey()); // Default to today
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTasks, setSelectedTasks] = useState(new Set());
@@ -84,6 +85,15 @@ export function AdminTasksPage() {
   const users = (state.users || []).filter((u) => u.isActive !== false);
   const sessionForRepo = session ? { userId: session.userId, role: session.role } : null;
 
+  // Create a map of user IDs to departments for quick lookup
+  const userDepartmentMap = useMemo(() => {
+    const map = new Map();
+    users.forEach((u) => {
+      if (u.department) map.set(u.id, u.department);
+    });
+    return map;
+  }, [users]);
+
   const filteredTasks = useMemo(() => {
     let list = tasks;
 
@@ -108,11 +118,17 @@ export function AdminTasksPage() {
     if (filterAssignee) list = list.filter((t) => t.assigneeId === filterAssignee);
     if (filterStatus) list = list.filter((t) => t.status === filterStatus);
     if (filterPriority) list = list.filter((t) => t.priority === filterPriority);
+    if (filterDepartment) {
+      list = list.filter((t) => {
+        const assigneeDepartment = userDepartmentMap.get(t.assigneeId);
+        return assigneeDepartment === filterDepartment;
+      });
+    }
     if (filterDate) {
       list = list.filter((t) => t.assignedAt && toDayKey(t.assignedAt) === filterDate);
     }
     return list;
-  }, [tasks, projects, users, searchQuery, filterProject, filterAssignee, filterStatus, filterPriority, filterDate]);
+  }, [tasks, projects, users, searchQuery, filterProject, filterAssignee, filterStatus, filterPriority, filterDepartment, filterDate, userDepartmentMap]);
 
   const getTaskReadOnly = useMemo(() => {
     const projectMap = new Map(projects.map((p) => [p.id, p]));
@@ -223,6 +239,7 @@ export function AdminTasksPage() {
         setFilterAssignee('');
         setFilterStatus('');
         setFilterPriority('');
+        setFilterDepartment('');
         setFilterDate('');
         setSearchQuery('');
         break;
@@ -235,6 +252,7 @@ export function AdminTasksPage() {
     if (filterAssignee) count++;
     if (filterStatus) count++;
     if (filterPriority) count++;
+    if (filterDepartment) count++;
     if (filterDate) count++;
     if (searchQuery.trim()) count++;
     return count;
@@ -260,7 +278,7 @@ export function AdminTasksPage() {
             <Filter className="w-4 h-4" />
             Filters
             {getActiveFilterCount() > 0 && (
-              <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">
+              <span className="bg-[var(--primary)] text-[var(--primary-fg)] text-xs rounded-full px-2 py-0.5">
                 {getActiveFilterCount()}
               </span>
             )}
@@ -272,7 +290,7 @@ export function AdminTasksPage() {
           <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
             <label htmlFor="search-tasks" className="text-sm font-medium text-[var(--fg)]">Search Tasks</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--fg-muted)] w-4 h-4" />
               <Input
                 id="search-tasks"
                 type="text"
@@ -285,7 +303,7 @@ export function AdminTasksPage() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
                   aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
@@ -300,66 +318,77 @@ export function AdminTasksPage() {
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 mb-3">
               {searchQuery && (
-                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--info-light)] text-[var(--info-muted-fg)] px-2 py-1 rounded-full text-sm">
                   Search: "{searchQuery}"
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--info-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filterProject && (
-                <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--success-light)] text-[var(--success-muted-fg)] px-2 py-1 rounded-full text-sm">
                   Project: {projects.find(p => p.id === filterProject)?.name}
                   <button
                     onClick={() => setFilterProject('')}
-                    className="hover:bg-green-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--success-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filterAssignee && (
-                <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--purple-light)] text-[var(--purple-fg)] px-2 py-1 rounded-full text-sm">
                   Assignee: {users.find(u => u.id === filterAssignee)?.name}
                   <button
                     onClick={() => setFilterAssignee('')}
-                    className="hover:bg-purple-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--purple-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filterStatus && (
-                <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--warning-light)] text-[var(--warning-muted-fg)] px-2 py-1 rounded-full text-sm">
                   Status: {filterStatus === 'TODO' ? 'To Do' : filterStatus === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
                   <button
                     onClick={() => setFilterStatus('')}
-                    className="hover:bg-yellow-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--warning-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filterPriority && (
-                <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--danger-light)] text-[var(--danger-muted-fg)] px-2 py-1 rounded-full text-sm">
                   Priority: {filterPriority === 'HIGH' ? 'High' : filterPriority === 'MEDIUM' ? 'Medium' : 'Low'}
                   <button
                     onClick={() => setFilterPriority('')}
-                    className="hover:bg-red-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--danger-muted)] rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {filterDepartment && (
+                <span className="inline-flex items-center gap-1 bg-[var(--teal-light)] text-[var(--teal-muted-fg)] px-2 py-1 rounded-full text-sm">
+                  Department: {filterDepartment}
+                  <button
+                    onClick={() => setFilterDepartment('')}
+                    className="hover:bg-[var(--teal-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filterDate && (
-                <span className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 bg-[var(--info-light)] text-[var(--info-muted-fg)] px-2 py-1 rounded-full text-sm">
                   Date: {filterDate}
                   <button
                     onClick={() => setFilterDate('')}
-                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                    className="hover:bg-[var(--info-muted)] rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -369,28 +398,28 @@ export function AdminTasksPage() {
 
             {/* Filter Presets */}
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className="text-sm font-medium text-gray-600 mr-2">Quick filters:</span>
+              <span className="text-sm font-medium text-[var(--fg-muted)] mr-2">Quick filters:</span>
               <button
                 onClick={() => applyFilterPreset('my-tasks')}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+                className="text-sm bg-[var(--muted)] hover:bg-[var(--active)] px-3 py-1 rounded-full transition-colors text-[var(--fg)]"
               >
                 My Tasks
               </button>
               <button
                 onClick={() => applyFilterPreset('overdue')}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+                className="text-sm bg-[var(--muted)] hover:bg-[var(--active)] px-3 py-1 rounded-full transition-colors text-[var(--fg)]"
               >
                 High Priority
               </button>
               <button
                 onClick={() => applyFilterPreset('this-week')}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors"
+                className="text-sm bg-[var(--muted)] hover:bg-[var(--active)] px-3 py-1 rounded-full transition-colors text-[var(--fg)]"
               >
                 Today's Tasks
               </button>
               <button
                 onClick={() => applyFilterPreset('clear-all')}
-                className="text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-full transition-colors"
+                className="text-sm bg-[var(--danger-light)] hover:bg-[var(--danger-muted)] text-[var(--danger-muted-fg)] px-3 py-1 rounded-full transition-colors"
               >
                 Clear All
               </button>
@@ -406,7 +435,7 @@ export function AdminTasksPage() {
             exit={{ opacity: 0, height: 0 }}
             className="border-t pt-4"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="filter-project" className="text-sm font-medium text-[var(--fg)]">Project</label>
                 <Select id="filter-project" value={filterProject} onChange={(e) => setFilterProject(e.target.value)} className="min-w-[140px]" aria-label="Filter by project">
@@ -441,6 +470,15 @@ export function AdminTasksPage() {
                   <option value="HIGH">High</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="LOW">Low</option>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="filter-department" className="text-sm font-medium text-[var(--fg)]">Department</label>
+                <Select id="filter-department" value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} className="min-w-[100px]" aria-label="Filter by department">
+                  <option value="">All</option>
+                  <option value="DEV">DEV</option>
+                  <option value="PRESALES">PRESALES</option>
+                  <option value="TESTER">TESTER</option>
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -514,7 +552,7 @@ export function AdminTasksPage() {
           onAction={
             tasks.length === 0
               ? handleCreateTask
-              : () => { setFilterProject(''); setFilterAssignee(''); setFilterStatus(''); setFilterPriority(''); setFilterDate(''); }
+              : () => { setFilterProject(''); setFilterAssignee(''); setFilterStatus(''); setFilterPriority(''); setFilterDepartment(''); setFilterDate(''); }
           }
         />
       ) : view === VIEW_KANBAN ? (

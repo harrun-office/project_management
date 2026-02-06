@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import { useDataStore } from '../../../store/dataStore.jsx';
 import { getSession } from '../../../store/sessionStore.js';
 import { ReadOnlyBanner } from '../../ui/ReadOnlyBanner.jsx';
@@ -7,6 +8,7 @@ import { Input } from '../../ui/Input.jsx';
 import { Select } from '../../ui/Select.jsx';
 import { Field } from '../../ui/Field.jsx';
 import { Button } from '../../ui/Button.jsx';
+import { IconButton } from '../../ui/IconButton.jsx';
 import { modalBackdrop, modalPanel } from '../../motion/motionPresets.js';
 
 /**
@@ -133,24 +135,43 @@ export function TaskModal({ open, mode, task, preselectedProjectId, onClose, onS
           animate={modalBackdrop.animate}
           exit={modalBackdrop.exit}
           transition={modalBackdrop.transition}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: 'var(--backdrop)' }}
+          className="fixed inset-0 z-50 flex items-center justify-center cursor-default"
+          style={{ 
+            backgroundColor: 'var(--backdrop)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            padding: 0,
+            margin: 0
+          }}
           onClick={onClose}
           aria-modal="true"
           role="dialog"
+          aria-label={isEdit ? 'Edit Task' : 'Create Task'}
         >
           <motion.div
             initial={modalPanel.initial}
             animate={modalPanel.animate}
             exit={modalPanel.exit}
             transition={modalPanel.transition}
-            className="bg-[var(--card)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] max-w-lg w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]"
+            className="relative bg-[var(--card)] rounded-2xl shadow-[var(--shadow-lg)] max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col border border-[var(--border)]"
             onClick={(e) => e.stopPropagation()}
           >
-        <div className="p-4 border-b border-[var(--border)]">
-          <h2 className="text-lg font-semibold">{isEdit ? 'Edit Task' : 'Create Task'}</h2>
-        </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            {/* Header with title and close button */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--surface)] shrink-0">
+              <h2 className="text-lg font-semibold text-[var(--fg)]">{isEdit ? 'Edit Task' : 'Create Task'}</h2>
+              <IconButton
+                icon={X}
+                aria-label="Close"
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="shrink-0"
+              />
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {savedMessage && (
             <p className="text-sm text-[var(--success-muted-fg)] bg-[var(--success-muted)] px-3 py-2 rounded-[var(--radius)]">{savedMessage}</p>
           )}
@@ -247,19 +268,20 @@ export function TaskModal({ open, mode, task, preselectedProjectId, onClose, onS
             />
           </Field>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={projectReadOnly || !session}
-            >
-              {isEdit ? 'Save' : 'Create'}
-            </Button>
-          </div>
-        </form>
+                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={projectReadOnly || !session}
+                  >
+                    {isEdit ? 'Save' : 'Create'}
+                  </Button>
+                </div>
+              </form>
+            </div>
           </motion.div>
         </motion.div>
       )}

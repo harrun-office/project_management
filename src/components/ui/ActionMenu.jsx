@@ -73,28 +73,28 @@ export function ActionMenu({ trigger, actions = [], disabled = false }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-8 z-50 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+            className="absolute right-0 top-8 z-50 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-[var(--shadow-lg)] py-1"
           >
             {actions.map((action, index) => (
               <div key={action.id || index}>
                 {action.type === 'divider' ? (
-                  <div className="border-t border-gray-100 my-1" />
+                  <div className="border-t border-[var(--border)] my-1" />
                 ) : (
                   <button
                     onClick={() => handleAction(action)}
                     disabled={action.disabled}
-                    className={`w-full text-left px-3 py-2 text-sm flex items-center gap-3 hover:bg-gray-50 transition-colors ${
+                    className={`w-full text-left px-3 py-2 text-sm flex items-center gap-3 hover:bg-[var(--muted)] transition-colors ${
                       action.destructive
-                        ? 'text-red-600 hover:bg-red-50'
-                        : 'text-gray-700'
+                        ? 'text-[var(--danger)] hover:bg-[var(--danger-light)]'
+                        : 'text-[var(--fg)]'
                     } ${action.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {action.icon && (
-                      <action.icon className={`w-4 h-4 ${action.destructive ? 'text-red-500' : 'text-gray-500'}`} />
+                      <action.icon className={`w-4 h-4 ${action.destructive ? 'text-[var(--danger)]' : 'text-[var(--fg-muted)]'}`} />
                     )}
                     <span>{action.label}</span>
                     {action.shortcut && (
-                      <span className="ml-auto text-xs text-gray-400">{action.shortcut}</span>
+                      <span className="ml-auto text-xs text-[var(--fg-muted)]">{action.shortcut}</span>
                     )}
                   </button>
                 )}

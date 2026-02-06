@@ -107,8 +107,8 @@ export function AdminProjectDetailPage() {
   if (!project) {
     return (
       <div className="max-w-[var(--content-narrow)]">
-        <p className="text-red-600 font-medium">Project not found.</p>
-        <Link to="/admin/projects" className="text-primary-600 hover:text-primary-700 hover:underline mt-2 inline-block transition-colors">Back to Projects</Link>
+        <p className="text-[var(--danger)] font-medium">Project not found.</p>
+        <Link to="/admin/projects" className="text-[var(--primary)] hover:text-[var(--primary-hover)] hover:underline mt-2 inline-block transition-colors">Back to Projects</Link>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export function AdminProjectDetailPage() {
 
   return (
     <div className="max-w-[var(--content-max)]">
-      <Link to="/admin/projects" className="text-sm text-primary-600 hover:text-primary-700 hover:underline mb-4 inline-block transition-colors">← Back to Projects</Link>
+      <Link to="/admin/projects" className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] hover:underline mb-4 inline-block transition-colors">← Back to Projects</Link>
 
       <PageHeader
         title={project.name}
@@ -135,7 +135,7 @@ export function AdminProjectDetailPage() {
                 onChange={(e) => handleStatusChange(e.target.value)}
                 onBlur={() => setStatusDropdownId(null)}
                 autoFocus
-                className="text-sm border border-gray-300 rounded px-3 py-1.5 focus:ring-2 focus:ring-blue-500"
+                className="text-sm border border-[var(--border)] rounded px-3 py-1.5 focus:ring-2 focus:ring-[var(--ring)] bg-[var(--surface)] text-[var(--fg)]"
               >
                 <option value="ACTIVE">Active</option>
                 <option value="ON_HOLD">On Hold</option>
@@ -145,7 +145,7 @@ export function AdminProjectDetailPage() {
               <button
                 type="button"
                 onClick={() => setStatusDropdownId(project.id)}
-                className="text-sm border border-gray-300 rounded px-3 py-1.5 hover:bg-gray-50"
+                className="text-sm border border-[var(--border)] rounded px-3 py-1.5 hover:bg-[var(--muted)] bg-[var(--surface)] text-[var(--fg)]"
               >
                 Change status
               </button>
@@ -180,12 +180,12 @@ export function AdminProjectDetailPage() {
           </>
         }
       />
-      <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
+      <div className="flex flex-wrap gap-4 text-sm text-[var(--fg-muted)] mb-6">
         <span>Start: {project.startDate ? project.startDate.slice(0, 10) : '—'}</span>
         <span>End: {project.endDate ? project.endDate.slice(0, 10) : '—'}</span>
       </div>
 
-      <nav className="border-b border-gray-200 mb-4">
+      <nav className="border-b border-[var(--border)] mb-4">
         <ul className="flex gap-4">
           {tabs.map((tab) => (
             <li key={tab.id}>
@@ -194,8 +194,8 @@ export function AdminProjectDetailPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 text-sm font-medium ${
                   activeTab === tab.id
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[var(--primary)] text-[var(--primary)]'
+                    : 'border-transparent text-[var(--fg-muted)] hover:text-[var(--fg)] hover:border-[var(--border-focus)]'
                 }`}
               >
                 {tab.label}
@@ -207,23 +207,23 @@ export function AdminProjectDetailPage() {
 
       {activeTab === TAB_OVERVIEW && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--fg-muted)]">
             Status: <StatusBadge status={project.status} /> — {STATUS_LABELS[project.status] ?? project.status}.
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--fg-muted)]">
             Start date: {project.startDate ? project.startDate.slice(0, 10) : '—'} · End date: {project.endDate ? project.endDate.slice(0, 10) : '—'}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--fg-muted)]">
             Assigned members: {assignedMembers.length}
           </p>
           {assignedMembers.length > 0 && (
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+            <ul className="list-disc list-inside text-sm text-[var(--fg-muted)] space-y-1">
               {assignedMembers.map((u) => (
                 <li key={u.id}>{u.name} · {u.department ?? '—'}</li>
               ))}
             </ul>
           )}
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--fg-muted)]">
             Tasks: {projectTasks.length} total (TODO: {taskCountByStatus.TODO}, In progress: {taskCountByStatus.IN_PROGRESS}, Completed: {taskCountByStatus.COMPLETED})
           </p>
         </div>
@@ -237,21 +237,21 @@ export function AdminProjectDetailPage() {
         <div className="space-y-4">
           {isReadOnly && <ReadOnlyBanner />}
           {assigneeNotifyMessage && (
-            <div className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg text-sm">{assigneeNotifyMessage}</div>
+            <div className="px-4 py-2 bg-[var(--info-light)] text-[var(--info-muted-fg)] rounded-lg text-sm">{assigneeNotifyMessage}</div>
           )}
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex rounded border border-gray-300 overflow-hidden">
+            <div className="flex rounded border border-[var(--border)] overflow-hidden">
               <button
                 type="button"
                 onClick={() => setTasksView(VIEW_KANBAN)}
-                className={`px-3 py-1.5 text-sm font-medium ${tasksView === VIEW_KANBAN ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                className={`px-3 py-1.5 text-sm font-medium ${tasksView === VIEW_KANBAN ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'bg-[var(--surface)] text-[var(--fg)] hover:bg-[var(--muted)]'}`}
               >
                 Kanban
               </button>
               <button
                 type="button"
                 onClick={() => setTasksView(VIEW_TABLE)}
-                className={`px-3 py-1.5 text-sm font-medium ${tasksView === VIEW_TABLE ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                className={`px-3 py-1.5 text-sm font-medium ${tasksView === VIEW_TABLE ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'bg-[var(--surface)] text-[var(--fg)] hover:bg-[var(--muted)]'}`}
               >
                 Table
               </button>
@@ -260,7 +260,7 @@ export function AdminProjectDetailPage() {
               <button
                 type="button"
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true); }}
-                className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                className="px-3 py-1.5 text-sm bg-[var(--primary)] text-[var(--primary-fg)] rounded-lg hover:bg-[var(--primary-hover)] transition-colors"
               >
                 Create Task
               </button>
